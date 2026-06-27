@@ -1,0 +1,125 @@
+---
+import { getCollection } from "astro:content";
+import SidebarLayout from "../../layouts/SidebarLayout.astro";
+
+const allPosts = (await getCollection("posts")).sort(
+  (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime(),
+);
+
+// 按年份分组
+const yearMap = new Map<number, typeof allPosts>();
+allPosts.forEach((post) => {
+  const year = new Date(post.data.date).getFullYear();
+  if (!yearMap.has(year)) yearMap.set(year, []);
+  yearMap.get(year)!.push(post);
+});
+const years = [...yearMap.entries()].sort((a, b) => b[0] - a[0]);
+---
+
+<SidebarLayout title="归档">
+  <div class="bg-(--md-surface-container-lowest) rounded-2xl p-8 shadow-sm overflow-hidden animate-fade-up">
+    <div>
+      {years.map(([year, posts]) => (
+        <div>
+          <!-- 年份行 -->
+          <div class="flex items-center h-[3.75rem]">
+            <div class="w-[15%] md:w-[10%] text-right text-2xl font-bold text-(--md-on-surface) shrink-0 transition-colors">
+              {year}
+            </div>
+            <div class="w-[15%] md:w-[10%] flex justify-center shrink-0">
+              <div class="h-3 w-3 rounded-full bg-transparent outline outline-3 outline-(--md-primary) -outline-offset-[2px] z-50 mx-auto" />
+            </div>
+            <div class="text-sm text-(--md-on-surface-variant) shrink-0">
+              {posts.length} 篇
+            </div>
+          </div>
+
+          <!-- 文章列表 -->
+          {posts.map((post, i) => (
+            <a
+              href={`/posts/${post.id}`}
+              aria-label={post.data.title}
+              class="archive-item group block h-10 w-full rounded-lg hover:bg-(--md-surface-container) transition-all"
+            >
+              <div class="flex items-center h-full">
+                <!-- 日期 -->
+                <div class="w-[15%] md:w-[10%] text-right text-sm text-(--md-on-surface-variant) shrink-0 font-mono transition-colors">
+                  {post.data.date.slice(5)}
+                </div>
+
+                <!-- 圆点 + 虚线 -->
+                <div class="dash-line w-[15%] md:w-[10%] relative h-full flex items-center">
+                  <div class="archive-dot mx-auto w-1 h-1 rounded-full transition-all duration-300
+                    bg-(--md-outline) group-hover:h-5 group-hover:bg-(--md-primary)
+                    outline outline-4 z-50 outline-(--md-surface-container-lowest)
+                    group-hover:outline-(--md-surface-container)" />
+                </div>
+
+                <!-- 标题 -->
+                <div class="text-sm text-(--md-on-surface) font-medium group-hover:text-(--md-primary)
+                  group-hover:translate-x-1 transition-all truncate shrink-0
+                  w-[70%] md:max-w-[65%] md:w-[65%]">
+                  {post.data.title}
+                </div>
+
+                <!-- 标签 -->
+                {post.data.tags && post.data.tags.length > 0 && (
+                  <div class="hidden md:block md:w-[15%] text-xs text-(--md-on-surface-variant) truncate opacity-60">
+                    {post.data.tags.map((t) => `#${t}`).join(" ")}
+                  </div>
+                )}
+              </div>
+            </a>
+          ))}
+        </div>
+      ))}
+    </div>
+  </div>
+</SidebarLayout>
+
+<style>
+  /* 垂直虚线：Fuwari 风格 */
+  .dash-line::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    border-left: 2px dashed var(--md-outline-variant);
+    transform: translateX(-50%);
+    z-index: 0;
+  }
+
+  /* 最后一个条目虚线不延伸到底 */
+  .dash-line:last-of-type::before {
+    bottom: 50%;
+  }
+
+  /* 交错淡入动画 */
+  .archive-item {
+    opacity: 0;
+    animation: archive-fade-in 0.3s ease-out forwards;
+  }
+
+  @keyframes archive-fade-in {
+    from {
+      opacity: 0;
+      transform: translateX(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .archive-item:nth-child(1) { animation-delay: 0.02s; }
+  .archive-item:nth-child(2) { animation-delay: 0.04s; }
+  .archive-item:nth-child(3) { animation-delay: 0.06s; }
+  .archive-item:nth-child(4) { animation-delay: 0.08s; }
+  .archive-item:nth-child(5) { animation-delay: 0.10s; }
+  .archive-item:nth-child(6) { animation-delay: 0.12s; }
+  .archive-item:nth-child(7) { animation-delay: 0.14s; }
+  .archive-item:nth-child(8) { animation-delay: 0.16s; }
+  .archive-item:nth-child(9) { animation-delay: 0.18s; }
+  .archive-item:nth-child(10) { animation-delay: 0.20s; }
+</style>

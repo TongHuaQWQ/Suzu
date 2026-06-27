@@ -1,0 +1,137 @@
+---
+import type { GraphNode, GraphEdge } from "../../utils/graph";
+
+interface Props {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  currentSlug?: string;
+}
+
+const { nodes, edges, currentSlug } = Astro.props;
+---
+
+{
+  nodes.length > 0 && (
+    <div class="bg-(--md-surface-container-lowest) rounded-2xl p-6 shadow-sm">
+      <h4 class="flex items-center gap-2 text-sm font-semibold text-(--md-on-surface) mb-3">
+        <span class="w-1 h-4 rounded-full bg-(--md-primary)" />
+        图谱
+      </h4>
+      <div
+        id="graph-container"
+        class="w-full h-48 rounded-lg overflow-hidden bg-(--md-surface)"
+        data-nodes={JSON.stringify(nodes)}
+        data-edges={JSON.stringify(edges)}
+        data-current={currentSlug || ""}
+      />
+    </div>
+  )
+}
+
+<script>
+  import ForceGraph from "force-graph";
+
+  function getConnectedNodes(nodes: any[], edges: any[], currentSlug: string) {
+    const currentId = currentSlug.replace(/^\/posts\//, "");
+    const connected = new Set<string>();
+    connected.add(currentId);
+    for (const e of edges) {
+      if (e.source === currentId) connected.add(e.target);
+      if (e.target === currentId) connected.add(e.source);
+    }
+    return {
+      nodes: nodes.filter((n) => connected.has(n.id)),
+      edges: edges.filter(
+        (e) => connected.has(e.source) && connected.has(e.target),
+      ),
+    };
+  }
+
+  function createGraph(
+    container: HTMLElement,
+    nodes: any[],
+    edges: any[],
+    currentSlug: string,
+    filtered: boolean,
+  ) {
+    const data = filtered
+      ? getConnectedNodes(nodes, edges, currentSlug)
+      : { nodes, edges };
+
+    const graph = ForceGraph()(container)
+      .width(container.clientWidth)
+      .height(container.clientHeight)
+      .backgroundColor("transparent")
+      .linkColor(() => "rgba(139, 38, 113, 0.2)")
+      .linkWidth(1)
+      .nodeColor((node) =>
+        node.id === currentSlug.replace(/^\/posts\//, "")
+          ? "#8b2671"
+          : data.edges.some(
+                (e) =>
+                  e.source === currentSlug.replace(/^\/posts\//, "") ||
+                  e.target === currentSlug.replace(/^\/posts\//, ""),
+              )
+            ? "#ffd7ee"
+            : "#d6c1c8",
+      )
+      .nodeRelSize(4)
+      .nodeLabel((node: any) => node.title)
+      .onNodeClick((node: any) => {
+        window.location.href = node.slug;
+      })
+      .d3AlphaDecay(0.03)
+      .d3VelocityDecay(0.8)
+      .minZoom(1)
+      .maxZoom(3);
+
+    graph.d3Force("charge").strength(-40);
+    graph.d3Force("link").distance(50);
+
+    graph.graphData({
+      nodes: data.nodes.map((n) => ({ ...n })),
+      links: data.edges.map((e) => ({ ...e })),
+    });
+
+    setTimeout(() => {
+      const currentId = currentSlug.replace(/^\/posts\//, "");
+      const current = data.nodes.find((n) => n.id === currentId);
+      if (current && typeof current.x === "number") {
+        graph.centerAt(current.x, current.y, 500);
+        graph.zoom(1.5, 500);
+      } else {
+        graph.zoomToFit(200, 20);
+      }
+    }, 800);
+
+    return graph;
+  }
+
+  function initGraph() {
+    const container = document.getElementById("graph-container");
+    if (!container) return;
+
+    const nodes = JSON.parse(container.dataset.nodes || "[]");
+    const edges = JSON.parse(container.dataset.edges || "[]");
+    const currentSlug = container.dataset.current || "";
+
+    if (nodes.length === 0) return;
+
+    const waitAndInit = () => {
+      if (container.clientWidth === 0 || container.clientHeight === 0) {
+        requestAnimationFrame(waitAndInit);
+        return;
+      }
+      createGraph(container, nodes, edges, currentSlug, true);
+    };
+
+    waitAndInit();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initGraph);
+  } else {
+    initGraph();
+  }
+  document.addEventListener("astro:page-load", initGraph);
+</script>

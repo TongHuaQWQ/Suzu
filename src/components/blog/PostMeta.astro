@@ -1,0 +1,62 @@
+---
+import { Icon } from "astro-icon/components";
+import { getDetailedTime } from "../../utils/time";
+
+interface Props {
+  date: string;
+}
+
+const { date } = Astro.props;
+const detailedTime = getDetailedTime(date);
+---
+
+<div
+  class="bg-(--md-surface-container-lowest) rounded-2xl shadow-sm p-5 flex items-start gap-3"
+>
+  <div
+    class="w-9 h-9 rounded-lg bg-(--md-primary-container) flex items-center justify-center shrink-0"
+  >
+    <Icon
+      name="gravity-ui:clock-arrow-rotate-left"
+      class="w-4.5 h-4.5 text-(--md-primary)"
+    />
+  </div>
+  <div class="text-sm text-(--md-on-surface-variant)">
+    <p>
+      <span class="text-(--md-on-surface) font-medium">发布于 </span>
+      <span id="elapsed-time" data-date={date}>{detailedTime}</span>
+    </p>
+    <p class="mt-1 text-xs opacity-60">部分信息可能已过时</p>
+  </div>
+</div>
+
+<script>
+  const el = document.getElementById("elapsed-time");
+  if (el) {
+    const dateStr = el.dataset.date;
+    if (dateStr) {
+      const pubDate = new Date(dateStr);
+      function update() {
+        const now = new Date();
+        let diffMs = Math.abs(now.getTime() - pubDate.getTime());
+        const sec = Math.floor(diffMs / 1000) % 60;
+        const min = Math.floor(diffMs / 60000) % 60;
+        const hour = Math.floor(diffMs / 3600000) % 24;
+        const totalDays = Math.floor(diffMs / 86400000);
+        const day = totalDays % 30;
+        const month = Math.floor(totalDays / 30) % 12;
+        const year = Math.floor(totalDays / 365);
+        const parts = [];
+        if (year > 0) parts.push(year + " 年");
+        if (month > 0) parts.push(month + " 个月");
+        if (day > 0) parts.push(day + " 天");
+        if (hour > 0) parts.push(hour + " 时");
+        if (min > 0) parts.push(min + " 分");
+        parts.push(sec + " 秒");
+        el.textContent = parts.join(" ");
+      }
+      update();
+      setInterval(update, 1000);
+    }
+  }
+</script>

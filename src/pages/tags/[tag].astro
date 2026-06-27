@@ -1,0 +1,47 @@
+---
+import { getCollection } from "astro:content";
+import type { CollectionEntry } from "astro:content";
+import type { ImageMetadata } from "astro";
+import SidebarLayout from "../../layouts/SidebarLayout.astro";
+import PostList from "../../components/blog/PostList.astro";
+import { getSortedPosts } from "../../utils/posts";
+
+type BlogPost = CollectionEntry<"posts">;
+
+const imageModules: Record<string, { default: ImageMetadata }> = import.meta.glob(
+  "../../assets/**/*.{jpg,jpeg,png,webp,svg}",
+  { eager: true },
+);
+
+export async function getStaticPaths() {
+  const allPosts = await getCollection("posts");
+  const allTags = [...new Set(allPosts.flatMap((p) => p.data.tags ?? []))];
+
+  const paths = [];
+  for (const tag of allTags) {
+    const posts: BlogPost[] = await getSortedPosts(
+      (p: BlogPost) => (p.data.tags ?? []).includes(tag),
+    );
+    paths.push({ params: { tag }, props: { tag, posts } });
+  }
+  return paths;
+}
+
+const { tag, posts } = Astro.props as { tag: string; posts: BlogPost[] };
+---
+
+<SidebarLayout title={`标签: ${tag}`}>
+  <div class="flex items-center gap-2 mb-2">
+    <h1 class="text-2xl font-bold text-(--md-on-surface)">标签</h1>
+    <span
+      class="px-3 py-1 text-sm rounded-lg bg-(--md-primary-container) text-(--md-on-primary-container)"
+    >
+      {tag}
+    </span>
+    <span class="text-sm text-(--md-on-surface-variant)">
+      ({posts.length} 篇)
+    </span>
+  </div>
+
+  <PostList posts={posts} slugPrefix={`tags/${tag}`} imageModules={imageModules} />
+</SidebarLayout>

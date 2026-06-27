@@ -1,0 +1,56 @@
+---
+import { Icon } from "astro-icon/components";
+
+interface Props {
+  prevId?: string | null;
+  nextId?: string | null;
+  prevTitle?: string;
+  nextTitle?: string;
+}
+
+const { prevId, nextId, prevTitle, nextTitle } = Astro.props;
+---
+
+<div class="flex gap-4">
+  <!-- 上一篇 -->
+  {
+    nextId && (
+      <a
+        href={`/posts/${nextId}`}
+        class="flex-1 block bg-(--md-surface-container-lowest) rounded-2xl shadow-sm p-5
+          hover:bg-(--md-surface-container) transition-colors min-w-0"
+      >
+        <div class="flex items-center gap-3">
+          <Icon
+            name="gravity-ui:chevron-left"
+            class="w-4 h-4 text-(--md-primary) shrink-0"
+          />
+          <p class="text-sm font-medium text-(--md-on-surface) truncate min-w-0">
+            {nextTitle}
+          </p>
+        </div>
+      </a>
+    )
+  }
+
+  <!-- 下一篇 -->
+  {
+    prevId && (
+      <a
+        href={`/posts/${prevId}`}
+        class="flex-1 block bg-(--md-surface-container-lowest) rounded-2xl shadow-sm p-5
+          hover:bg-(--md-surface-container) transition-colors min-w-0"
+      >
+        <div class="flex items-center justify-end gap-3 text-right">
+          <p class="text-sm font-medium text-(--md-on-surface) truncate min-w-0">
+            {prevTitle}
+          </p>
+          <Icon
+            name="gravity-ui:chevron-right"
+            class="w-4 h-4 text-(--md-primary) shrink-0"
+          />
+        </div>
+      </a>
+    )
+  }
+</div>

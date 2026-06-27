@@ -1,0 +1,75 @@
+---
+import { site } from "../../site.config";
+
+interface Props {
+  categories: [string, number][];
+}
+
+const { categories } = Astro.props;
+const { categoryRows } = site.sidebar;
+const isCollapsed = categories.length > categoryRows;
+// 每行约 2.25rem (py-1.5 + text)
+const collapsedHeight = `${categoryRows * 2.25}rem`;
+---
+
+{categories.length > 0 && (
+  <div class="bg-(--md-surface-container-lowest) rounded-2xl p-6 shadow-sm">
+    <h4 class="flex items-center gap-2 text-sm font-semibold text-(--md-on-surface) mb-3">
+      <span class="w-1 h-4 rounded-full bg-(--md-primary)" />
+      分类
+    </h4>
+    <div
+      class:list={[
+        "space-y-2 overflow-hidden transition-all duration-300",
+        { "is-collapsed": isCollapsed },
+      ]}
+    >
+      {categories.map(([cat, count]) => (
+        <a
+          href={`/categories/${cat}`}
+          class="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-(--md-surface-container) transition-colors"
+        >
+          <span class="text-sm text-(--md-on-surface-variant)">{cat}</span>
+          <span class="px-2 py-0.5 text-xs rounded-md bg-(--md-primary-container) text-(--md-on-primary-container)">
+            {count}
+          </span>
+        </a>
+      ))}
+    </div>
+    {isCollapsed && (
+      <button
+        data-expand-btn
+        class="w-full text-center mt-3 text-xs text-(--md-primary) hover:opacity-80 transition-opacity cursor-pointer"
+      >
+        更多
+      </button>
+    )}
+  </div>
+)}
+
+<style define:vars={{ collapsedHeight }}>
+  .is-collapsed {
+    max-height: var(--collapsedHeight);
+  }
+</style>
+
+<script>
+  function initExpand() {
+    document.querySelectorAll<HTMLElement>("[data-expand-btn]").forEach((btn) => {
+      const wrapper = btn.previousElementSibling as HTMLElement | null;
+      if (!wrapper) return;
+
+      btn.addEventListener("click", () => {
+        wrapper.classList.remove("is-collapsed");
+        btn.classList.add("hidden");
+      });
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initExpand);
+  } else {
+    initExpand();
+  }
+  document.addEventListener("astro:page-load", initExpand);
+</script>

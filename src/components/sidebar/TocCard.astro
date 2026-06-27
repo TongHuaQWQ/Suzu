@@ -1,0 +1,331 @@
+---
+import type { MarkdownHeading } from "astro";
+import { site } from "../../site.config";
+
+interface Props {
+  headings: MarkdownHeading[];
+}
+
+const { headings } = Astro.props;
+
+const hasH1 = headings.some((h) => h.depth === 1);
+const minDepth = hasH1 ? 1 : 2;
+const maxDepth = hasH1 ? 3 : 4;
+const filtered = headings
+  .filter((h) => h.depth >= minDepth && h.depth <= maxDepth)
+  .map((h) => ({ ...h, text: h.text.replace(/#$/, "").trim() }));
+
+let topCounter = 0;
+---
+
+{
+  filtered.length > 0 && (
+    <div class="toc-card shadow-sm" data-navbar-height={site.ui.navbarHeight}>
+      <h4 class="flex items-center gap-2 text-sm font-semibold text-(--md-on-surface) mb-3">
+        <span class="w-1 h-4 rounded-full bg-(--md-primary)" />
+        目录
+      </h4>
+      <div class="toc-scroll" id="toc-scroll">
+        <nav class="toc-nav group" id="toc-nav">
+          {/* 活动指示器（JS 控制位置） */}
+          <div class="toc-indicator" id="toc-indicator" />
+
+          {filtered.map((heading) => {
+            const level = heading.depth - minDepth;
+            const isTop = level === 0;
+            const isMid = level === 1;
+            if (isTop) topCounter++;
+
+            return (
+              <a
+                href={`#${heading.slug}`}
+                class:list={[
+                  "toc-item",
+                  { "toc-top": isTop },
+                  { "toc-mid": isMid },
+                  { "toc-bottom": level === 2 },
+                ]}
+                data-heading-id={heading.slug}
+              >
+                {isTop ? (
+                  <span class="toc-badge">{topCounter}</span>
+                ) : isMid ? (
+                  <span class="toc-dot" />
+                ) : (
+                  <span class="toc-dot-sm" />
+                )}
+                <span class="toc-text">{heading.text}</span>
+              </a>
+            );
+          })}
+        </nav>
+      </div>
+    </div>
+  )
+}
+
+<script>
+  function initToc() {
+    const nav = document.getElementById("toc-nav");
+    const scroll = document.getElementById("toc-scroll");
+    const indicator = document.getElementById("toc-indicator");
+    if (!nav || !scroll || !indicator) return;
+
+    const items = nav.querySelectorAll<HTMLElement>(
+      ".toc-item[data-heading-id]",
+    );
+    if (items.length === 0) return;
+
+    const headingEls: HTMLElement[] = [];
+    items.forEach((item) => {
+      const id = item.dataset.headingId;
+      const el = id ? document.getElementById(id) : null;
+      if (el) headingEls.push(el);
+    });
+    if (headingEls.length === 0) return;
+
+    // 导航栏偏移量（从 data 属性读取）
+    const navbarOffset = parseInt(nav.closest("[data-navbar-height]")?.getAttribute("data-navbar-height") || "80");
+
+    // ── 点击跳转：平滑滚动 + 偏移 ──
+    nav.addEventListener("click", (e) => {
+      const anchor = (e.target as HTMLElement).closest(
+        "a[href^='#']",
+      ) as HTMLAnchorElement | null;
+      if (!anchor) return;
+      e.preventDefault();
+      const id = decodeURIComponent(anchor.hash.slice(1));
+      const target = document.getElementById(id);
+      if (!target) return;
+      const y =
+        target.getBoundingClientRect().top + window.scrollY - navbarOffset;
+      window.scrollTo({ top: y, behavior: "smooth" });
+    });
+
+    function updateIndicator() {
+      const activeItems = Array.from(items).filter(
+        (item) => item.dataset.active === "true",
+      );
+
+      if (activeItems.length === 0) {
+        indicator.style.opacity = "0";
+        return;
+      }
+
+      const first = activeItems[0];
+      const last = activeItems[activeItems.length - 1];
+      const navRect = nav.getBoundingClientRect();
+      const firstRect = first.getBoundingClientRect();
+      const lastRect = last.getBoundingClientRect();
+
+      const top = firstRect.top - navRect.top + nav.scrollTop;
+      const height = lastRect.bottom - firstRect.top;
+
+      indicator.style.opacity = "1";
+      indicator.style.top = `${top}px`;
+      indicator.style.height = `${height}px`;
+    }
+
+    let scrollTimer: ReturnType<typeof setTimeout>;
+    function scrollToActive() {
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => {
+        const activeItems = Array.from(items).filter(
+          (item) => item.dataset.active === "true",
+        );
+        if (activeItems.length === 0 || !scroll) return;
+
+        const first = activeItems[0];
+        const last = activeItems[activeItems.length - 1];
+        const scrollRect = scroll.getBoundingClientRect();
+        const firstTop = first.getBoundingClientRect().top - scrollRect.top;
+        const lastBottom = last.getBoundingClientRect().bottom - scrollRect.top;
+        const scrollH = scroll.clientHeight;
+
+        // 如果活跃项不在可视区域内，滚动跟随
+        if (firstTop < 0 || lastBottom > scrollH) {
+          const targetTop = (first as HTMLElement).offsetTop - 32;
+          scroll.scrollTo({
+            top: Math.max(0, targetTop),
+            behavior: "smooth",
+          });
+        }
+      }, 80);
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const idx = headingEls.indexOf(entry.target as HTMLElement);
+          if (idx === -1) return;
+          const item = items[idx];
+          if (!item) return;
+          if (entry.isIntersecting) {
+            item.setAttribute("data-active", "true");
+          } else {
+            item.removeAttribute("data-active");
+          }
+        });
+        requestAnimationFrame(() => {
+          updateIndicator();
+          scrollToActive();
+        });
+      },
+      { rootMargin: `-${navbarOffset}px 0px -60% 0px`, threshold: 0 },
+    );
+
+    headingEls.forEach((el) => observer.observe(el));
+  }
+
+  document.addEventListener("astro:page-load", initToc);
+  initToc();
+</script>
+
+<style>
+  .toc-card {
+    background: var(--md-surface-container-lowest);
+    border-radius: 1rem;
+    padding: 1rem;
+  }
+
+  /* ── 滚动容器：限高 + 隐藏滚动条 ── */
+  .toc-scroll {
+    max-height: 20rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    /* 隐藏滚动条 */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .toc-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .toc-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    position: relative;
+  }
+
+  /* ── 活动指示器（Mizuki 风格）── */
+  .toc-indicator {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-radius: 0.5rem;
+    background: var(--md-surface-container);
+    transition:
+      top 0.18s ease,
+      height 0.18s ease,
+      opacity 0.14s ease;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  /* hover 时指示器变虚线边框 */
+  .group:hover .toc-indicator {
+    background: transparent;
+    border: 2px dashed var(--md-outline-variant);
+  }
+
+  /* ── TOC 条目 ── */
+  .toc-item {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.5rem;
+    border-radius: 0.5rem;
+    font-size: 0.85rem;
+    text-decoration: none;
+    color: var(--md-on-surface-variant);
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  .toc-item:hover {
+    background: var(--md-surface-container);
+    color: var(--md-primary);
+  }
+
+  /* 顶层 */
+  .toc-top {
+    font-weight: 500;
+    color: var(--md-on-surface);
+  }
+
+  /* 中层缩进 */
+  .toc-mid {
+    padding-left: 1.25rem;
+  }
+
+  /* 底层缩进更多 */
+  .toc-bottom {
+    padding-left: 2.25rem;
+  }
+
+  /* ── Badge ── */
+  .toc-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 0.375rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    background: var(--md-primary-container);
+    color: var(--md-on-primary-container);
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  .toc-dot {
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 9999px;
+    flex-shrink: 0;
+    background: var(--md-outline);
+    transition: background-color 0.15s ease;
+  }
+
+  .toc-dot-sm {
+    width: 0.25rem;
+    height: 0.25rem;
+    border-radius: 9999px;
+    flex-shrink: 0;
+    background: var(--md-outline-variant);
+    transition: background-color 0.15s ease;
+  }
+
+  .toc-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ── 活跃状态 ── */
+  .toc-item[data-active] {
+    color: var(--md-primary);
+  }
+
+  .toc-item[data-active] .toc-badge {
+    background: var(--md-primary);
+    color: white;
+  }
+
+  .toc-item[data-active] .toc-dot,
+  .toc-item[data-active] .toc-dot-sm {
+    background: var(--md-primary);
+  }
+</style>

@@ -1,0 +1,73 @@
+---
+import { site } from "../../site.config";
+
+interface Props {
+  tags: string[];
+}
+
+const { tags } = Astro.props;
+const { tagRows } = site.sidebar;
+const isCollapsed = tags.length > tagRows;
+// 标签每行约 2rem (py-1 + text)
+const collapsedHeight = `${tagRows * 2}rem`;
+---
+
+{tags.length > 0 && (
+  <div class="bg-(--md-surface-container-lowest) rounded-2xl p-6 shadow-sm">
+    <h4 class="flex items-center gap-2 text-sm font-semibold text-(--md-on-surface) mb-3">
+      <span class="w-1 h-4 rounded-full bg-(--md-primary)" />
+      标签
+    </h4>
+    <div
+      class:list={[
+        "flex flex-wrap gap-2 overflow-hidden transition-all duration-300",
+        { "is-collapsed": isCollapsed },
+      ]}
+    >
+      {tags.map((tag) => (
+        <a
+          href={`/tags/${tag}`}
+          class="text-xs px-2.5 py-1 rounded-lg bg-(--md-surface-container-low) text-(--md-on-surface-variant)
+          hover:bg-(--md-primary-container) hover:text-(--md-on-primary-container) transition-colors"
+        >
+          #{tag}
+        </a>
+      ))}
+    </div>
+    {isCollapsed && (
+      <button
+        data-expand-btn
+        class="w-full text-center mt-3 text-xs text-(--md-primary) hover:opacity-80 transition-opacity cursor-pointer"
+      >
+        更多
+      </button>
+    )}
+  </div>
+)}
+
+<style define:vars={{ collapsedHeight }}>
+  .is-collapsed {
+    max-height: var(--collapsedHeight);
+  }
+</style>
+
+<script>
+  function initExpand() {
+    document.querySelectorAll<HTMLElement>("[data-expand-btn]").forEach((btn) => {
+      const wrapper = btn.previousElementSibling as HTMLElement | null;
+      if (!wrapper) return;
+
+      btn.addEventListener("click", () => {
+        wrapper.classList.remove("is-collapsed");
+        btn.classList.add("hidden");
+      });
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initExpand);
+  } else {
+    initExpand();
+  }
+  document.addEventListener("astro:page-load", initExpand);
+</script>

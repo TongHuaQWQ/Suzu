@@ -1,0 +1,82 @@
+---
+import { getCollection } from "astro:content";
+import SidebarLayout from "../../layouts/SidebarLayout.astro";
+import Backpack from "../../components/backpack/Backpack.astro";
+
+const devices = await getCollection("backpack");
+
+// 动态导入所有设备图片
+const images = import.meta.glob<{ default: ImageMetadata }>(
+  "../../assets/devices/*.{jpg,jpeg,png,webp}",
+  { eager: true }
+);
+
+// 组装数据
+const allItems = devices.map((device) => {
+  const imagePath = device.data.image;
+  const imageModule = imagePath ? images[imagePath] : null;
+  return {
+    title: device.data.title,
+    description: device.data.description,
+    year: device.data.year,
+    status: device.data.status,
+    image: imageModule ? imageModule.default : null,
+    slug: device.id,
+    reason: device.data.reason,
+    category: device.data.category,
+  };
+});
+
+// 分类排序顺序
+const categoryOrder = ["设备", "穿戴设备"];
+
+// 按分类分组
+const grouped: Record<string, typeof allItems> = {};
+const uncategorized: typeof allItems = [];
+
+for (const item of allItems) {
+  if (item.category) {
+    if (!grouped[item.category]) grouped[item.category] = [];
+    grouped[item.category].push(item);
+  } else {
+    uncategorized.push(item);
+  }
+}
+
+// 按指定顺序排列分类
+const sortedCategories = categoryOrder.filter((cat) => grouped[cat]);
+// 不在排序列表里的分类放最后
+const extraCategories = Object.keys(grouped).filter(
+  (cat) => !categoryOrder.includes(cat)
+);
+const allCategories = [...sortedCategories, ...extraCategories];
+---
+
+<SidebarLayout title="我的设备">
+  <div class="space-y-6 animate-fade-up">
+    <!-- 有分类的设备 -->
+    {allCategories.map((category, index) => (
+      <div>
+        {index > 0 && (
+          <div class="border-t border-dashed border-(--md-outline-variant) my-6" />
+        )}
+        <!-- 分类标题卡片 -->
+        <div class="bg-(--md-surface-container-lowest) rounded-2xl px-5 py-3 shadow-sm mb-4 w-fit">
+          <h2 class="text-xl font-bold text-(--md-on-surface)">{category}</h2>
+        </div>
+        <!-- 设备卡片 -->
+        <Backpack items={grouped[category]} />
+      </div>
+    ))}
+
+    <!-- 无分类的设备 -->
+    {uncategorized.length > 0 && (
+      <div>
+        {allCategories.length > 0 && (
+          <div class="border-t border-dashed border-(--md-outline-variant) my-6" />
+        )}
+        <Backpack items={uncategorized} />
+      </div>
+    )}
+  </div>
+</SidebarLayout>

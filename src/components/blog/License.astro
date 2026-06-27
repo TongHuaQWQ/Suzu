@@ -1,0 +1,58 @@
+---
+import { Icon } from "astro-icon/components";
+import { site } from "../../site.config";
+
+interface Props {
+  title: string;
+  date: string;
+  author?: string;
+}
+
+const { title, date, author } = Astro.props;
+const authorName = author || site.profile.name;
+const postUrl = decodeURIComponent(Astro.url.toString());
+---
+
+<div
+  class="relative overflow-hidden bg-(--md-surface-container-low) rounded-xl py-5 px-6"
+>
+  <!-- 标题 -->
+  <div class="font-bold text-(--md-on-surface) text-sm">
+    {title}
+  </div>
+  <!-- 文章链接 -->
+  <a
+    href={postUrl}
+    class="text-xs text-(--md-primary) hover:underline break-all"
+  >
+    {postUrl}
+  </a>
+
+  <!-- 三列信息 -->
+  <div class="flex gap-6 mt-4">
+    <div>
+      <div class="text-xs text-(--md-on-surface-variant)/50 mb-0.5">作者</div>
+      <div class="text-sm text-(--md-on-surface)">{authorName}</div>
+    </div>
+    <div>
+      <div class="text-xs text-(--md-on-surface-variant)/50 mb-0.5">发布于</div>
+      <div class="text-sm text-(--md-on-surface)">{date}</div>
+    </div>
+    <div>
+      <div class="text-xs text-(--md-on-surface-variant)/50">许可</div>
+      <a
+        href={site.license.url}
+        target="_blank"
+        class="text-sm text-(--md-primary) hover:underline"
+      >
+        {site.license.name}
+      </a>
+    </div>
+  </div>
+
+  <!-- 背景水印 CC 图标 -->
+  <Icon
+    name="fa7-brands:creative-commons"
+    class="text-[18rem] absolute pointer-events-none right-4 top-1/2 -translate-y-1/2 text-(--md-on-surface)/6"
+  />
+</div>

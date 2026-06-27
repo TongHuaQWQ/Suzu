@@ -1,0 +1,237 @@
+---
+import { Icon } from "astro-icon/components";
+
+export interface Tab {
+  id: string;
+  label: string;
+  shortLabel?: string;
+  icon?: string;
+  count?: number;
+}
+
+interface Props {
+  tabs: Tab[];
+  defaultTab?: string;
+  name?: string;
+  fullWidth?: boolean;
+}
+
+const { tabs, defaultTab, name, fullWidth } = Astro.props;
+const activeId = defaultTab || tabs[0]?.id;
+const radioName = name || `tab-${defaultTab || "default"}`;
+---
+
+<div class="tab-switcher">
+  <!-- Tab 切换器 -->
+  <div
+    class:list={[
+      "tab-bar relative flex items-center gap-1 p-1 bg-(--md-surface-container-high) rounded-lg mb-4",
+      fullWidth ? "w-full" : "inline-flex",
+    ]}
+  >
+    <!-- 滑动指示器 -->
+    <div
+      class="tab-indicator absolute bg-(--md-surface-container-lowest) rounded-md shadow-sm transition-all duration-300 ease-out"
+    >
+    </div>
+    {
+      tabs.map((tab) => (
+        <label class:list={[
+          "tab-label flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors whitespace-nowrap relative z-1 text-(--md-on-surface-variant) has-checked:text-(--md-primary)",
+          fullWidth && "flex-1",
+        ]}>
+          <input
+            type="radio"
+            name={radioName}
+            value={tab.id}
+            class="sr-only"
+            checked={tab.id === activeId}
+          />
+          {tab.icon && <Icon name={tab.icon} class="w-4 h-4" />}
+          {tab.shortLabel ? (
+            <>
+              <span class="hidden md:inline">{tab.label}</span>
+              <span class="hidden sm:inline md:hidden">{tab.shortLabel}</span>
+            </>
+          ) : (
+            <span class="hidden sm:inline">{tab.label}</span>
+          )}
+          {tab.count !== undefined && (
+            <span class="opacity-60 hidden sm:inline">({tab.count})</span>
+          )}
+        </label>
+      ))
+    }
+  </div>
+
+  <!-- Tab 内容 -->
+  <div class="tab-content relative">
+    <slot />
+  </div>
+</div>
+
+<style>
+  .tab-bar {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tab-indicator {
+    top: 0.25rem;
+    bottom: 0.25rem;
+    left: 0;
+    pointer-events: none;
+  }
+
+  :global(.tab-panel) {
+    display: none;
+    animation: tab-slide-in 0.3s ease-out;
+  }
+
+  :global(.tab-panel.active) {
+    display: block;
+  }
+
+  @keyframes tab-slide-in {
+    from {
+      opacity: 0;
+      transform: translateX(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+</style>
+
+<script>
+  function initTabSwitchers() {
+    document.querySelectorAll(".tab-switcher").forEach((switcher) => {
+      const radios = switcher.querySelectorAll('input[type="radio"]');
+      const panels = switcher.querySelectorAll(".tab-panel");
+      const indicator = switcher.querySelector(
+        ".tab-indicator",
+      ) as HTMLElement | null;
+      const labels = switcher.querySelectorAll(
+        ".tab-label",
+      ) as NodeListOf<HTMLElement>;
+
+      if (radios.length === 0 || !indicator) return;
+
+      function updateIndicator() {
+        const checked = switcher.querySelector(
+          'input[type="radio"]:checked',
+        ) as HTMLInputElement | null;
+        if (!checked) return;
+
+        const activeLabel = checked.closest(".tab-label") as HTMLElement;
+        if (!activeLabel) return;
+
+        // 用 offsetLeft/offsetWidth 相对于 offsetParent（即 .tab-bar）计算
+        indicator!.style.width = `${activeLabel.offsetWidth}px`;
+        indicator!.style.transform = `translateX(${activeLabel.offsetLeft}px)`;
+      }
+
+      function switchTab() {
+        const checked = switcher.querySelector(
+          'input[type="radio"]:checked',
+        ) as HTMLInputElement | null;
+        if (!checked) return;
+
+        panels.forEach((panel) => {
+          panel.classList.remove("active");
+          if ((panel as HTMLElement).dataset.tab === checked.value) {
+            panel.classList.add("active");
+          }
+        });
+
+        updateIndicator();
+      }
+
+      radios.forEach((radio) => radio.addEventListener("change", switchTab));
+
+      // 初始定位（等渲染完）
+      requestAnimationFrame(() => switchTab());
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initTabSwitchers);
+  } else {
+    initTabSwitchers();
+  }
+  document.addEventListener("astro:page-load", initTabSwitchers);
+</script>
+
+<!--
+  ── TabSwitcher 使用方法 ──
+
+  Props:
+    tabs: Tab[]          - Tab 配置数组
+    defaultTab?: string  - 默认选中的 Tab id（默认第一个）
+    name?: string        - radio 组名（多实例时自动分配）
+    fullWidth?: boolean  - Tab 栏是否撑满整行（默认 false，inline）
+
+  Tab 接口:
+    id: string           - Tab 唯一标识
+    label: string        - 显示文字
+    icon?: string        - 图标名称（可选）
+    count?: number       - 数量标签（可选）
+
+  使用示例:
+
+  1. 基础用法（2个 Tab）:
+
+    ---
+    import TabSwitcher from "../components/ui/TabSwitcher.astro";
+    ---
+
+    <TabSwitcher
+      tabs={[
+        { id: "tab1", label: "标签1", icon: "gravity-ui:arrow-right", count: 3 },
+        { id: "tab2", label: "标签2", icon: "gravity-ui:link", count: 5 },
+      ]}
+      defaultTab="tab2"
+    >
+      <div class="tab-panel" data-tab="tab1">
+        Tab 1 内容
+      </div>
+      <div class="tab-panel" data-tab="tab2">
+        Tab 2 内容
+      </div>
+    </TabSwitcher>
+
+  2. 撑满整行（项目页分类 Tab）:
+
+    <TabSwitcher tabs={tabs} defaultTab="all" fullWidth>
+      ...
+    </TabSwitcher>
+
+  3. 单个 Tab（不显示切换器，只显示内容）:
+
+    <TabSwitcher tabs={[{ id: "only", label: "唯一" }]}>
+      <div class="tab-panel active" data-tab="only">
+        内容
+      </div>
+    </TabSwitcher>
+
+  4. 动态 Tab（根据数据生成）:
+
+    ---
+    const tabs = [];
+    if (hasA) tabs.push({ id: "a", label: "A", count: a.length });
+    if (hasB) tabs.push({ id: "b", label: "B", count: b.length });
+    ---
+
+    <TabSwitcher tabs={tabs} defaultTab={hasB ? "b" : "a"}>
+      {hasA && <div class="tab-panel" data-tab="a">...</div>}
+      {hasB && <div class="tab-panel" data-tab="b">...</div>}
+    </TabSwitcher>
+
+  注意:
+    - 每个 tab-panel 必须有 data-tab 属性，值对应 tabs 数组中的 id
+    - 默认选中的 tab-panel 需要加 active 类（或通过 defaultTab 控制）
+    - Tab 块切换时有滑动动画（300ms ease-out）
+    - 内容区有淡入滑动动画
+    - 支持多个 TabSwitcher 实例共存
+-->

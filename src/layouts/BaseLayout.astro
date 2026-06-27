@@ -1,0 +1,77 @@
+---
+import Navigation from "../components/layout/Navigation.astro";
+import "../styles/global.css";
+import "../styles/github-card.css";
+import { site } from "../site.config";
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+}
+
+const {
+  title = site.title,
+  description = site.description,
+  image = site.seo.ogImage,
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, site.url);
+const ogImageURL = new URL(image, site.url);
+const githubToken = import.meta.env.GITHUB_TOKEN || "";
+---
+
+<!doctype html>
+<html lang={site.lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title === site.title ? title : `${title} | ${site.title}`}</title>
+    <meta name="description" content={description} />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href={canonicalURL} />
+
+    <!-- Favicon -->
+    <link rel="icon" href={site.seo.favicon} type="image/svg+xml" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImageURL} />
+    <meta property="og:locale" content={site.lang.replace("-", "_")} />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content={site.seo.twitterCard} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageURL} />
+  </head>
+  <body class="bg-(--md-surface) min-h-screen" data-github-token={githubToken}>
+    <div class="max-w-6xl mx-auto px-4 mt-6 flex flex-col gap-6">
+      <Navigation />
+      <main>
+        <slot />
+      </main>
+    </div>
+  </body>
+  <script>
+    // ── 标题锚点平滑滚动（全局）──
+    document.addEventListener("click", (e) => {
+      const anchor = (e.target as HTMLElement).closest(
+        ".heading-anchor",
+      ) as HTMLAnchorElement | null;
+      if (!anchor) return;
+      e.preventDefault();
+      const id = decodeURIComponent(anchor.hash.slice(1));
+      const target = document.getElementById(id);
+      if (!target) return;
+      const y = target.getBoundingClientRect().top + window.scrollY - 80;
+      window.scrollTo({ top: y, behavior: "smooth" });
+      history.replaceState(null, "", `#${id}`);
+    });
+  </script>
+  <script is:inline src="/scripts/github-card.js"></script>
+</html>

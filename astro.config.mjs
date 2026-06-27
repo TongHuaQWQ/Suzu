@@ -1,5 +1,66 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 
+import { satteri } from '@astrojs/markdown-satteri';
+import icon from 'astro-icon';
+import tailwindcss from '@tailwindcss/vite';
+import mdx from '@astrojs/mdx';
+import expressiveCode from 'astro-expressive-code';
+import { remarkHeadingAnchor } from './src/plugins/remark-heading-anchor';
+import { remarkWikilink } from './src/plugins/remark-wikilink';
+import { remarkGithubCard } from './src/plugins/remark-github-card';
+import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers'
+import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections'
+import { pluginLanguageBadge } from 'expressive-code-language-badge';
+
 // https://astro.build/config
-export default defineConfig({});
+export default defineConfig({
+  image: {
+    domains: ["q.qlogo.cn"],
+  },
+  integrations: [
+    expressiveCode({
+      themes: ['catppuccin-latte'],
+
+      plugins: [
+        pluginLineNumbers(),
+        pluginCollapsibleSections(),
+        pluginLanguageBadge({
+          textTransform: 'lowercase',
+          excludeLanguages: ['txt'],
+        }),
+      ],
+      defaultProps: {
+        wrap: true,
+        collapseStyle: 'collapsible-start',
+      },
+      styleOverrides: {
+        borderRadius: '0.75rem',
+
+        codeFontFamily: "'Maple Mono', monospace",
+        languageBadge: {
+          fontSize: '0.7rem',
+          fontColor: '#8b2671',
+          fontWeight: '500',
+          background: '#ffd7ee',
+          borderRadius: '0.375rem',
+        },
+      },
+    }),
+    icon(),
+    mdx(),
+  ],
+  vite: {
+    plugins: [tailwindcss()]
+  },
+  markdown: {
+    processor: satteri({
+      features: { directive: true },
+      mdastPlugins: [remarkGithubCard()],
+      hastPlugins: [remarkHeadingAnchor(), remarkWikilink()],
+    }),
+  },
+  devToolbar: {
+    enabled: false
+  }
+});

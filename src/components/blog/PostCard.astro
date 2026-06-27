@@ -1,0 +1,216 @@
+---
+import { Image } from "astro:assets";
+import { Icon } from "astro-icon/components";
+
+interface Props {
+  title: string;
+  date: string;
+  description?: string;
+  tags?: string[];
+  categories?: string[];
+  slug: string;
+  wordCount?: number;
+  readingTime?: number;
+  image?: ImageMetadata;
+  pinned?: boolean;
+  index?: number;
+}
+
+const {
+  title,
+  date,
+  description,
+  tags,
+  categories,
+  slug,
+  wordCount,
+  readingTime,
+  image,
+  pinned,
+  index = 0,
+} = Astro.props;
+const hasCover = !!image;
+---
+
+<div
+  class="group bg-(--md-surface-container-lowest) rounded-2xl overflow-hidden relative
+    animate-fade-up shadow-sm hover:shadow-md transition-all duration-300"
+  style={`animation-delay: ${index * 60}ms`}
+>
+  <div
+    class:list={[
+      "flex",
+      hasCover ? "flex-col-reverse md:flex-col" : "flex-col",
+    ]}
+  >
+    <!-- 内容区 -->
+    <div
+      class:list={[
+        "pb-6 relative",
+        hasCover
+          ? "pl-6 md:pl-9 pr-6 md:pr-2 pt-6 md:pt-7 w-full md:w-[calc(100%-28%-0.75rem)]"
+          : "pl-6 md:pl-9 pr-6 md:pr-16 pt-6 md:pt-7 w-full",
+      ]}
+    >
+      <!-- 标题 -->
+      <a href={`/posts/${slug}`} class="block">
+        <h3
+          class="relative font-bold text-2xl md:text-3xl text-(--md-on-surface)
+            group-hover:text-(--md-primary) transition-colors duration-300
+            before:content-[''] before:absolute before:-left-4 before:top-1/2 before:-translate-y-1/2
+            before:w-1 before:h-5 before:rounded-md before:bg-(--md-primary)
+            hidden md:block"
+        >
+          {
+            pinned && (
+              <Icon
+                name="gravity-ui:star-fill"
+                class="inline w-4 h-4 mr-1 text-(--md-primary) align-middle"
+              />
+            )
+          }
+          {title}
+          <Icon
+            name="gravity-ui:chevron-right"
+            class="inline w-5 h-5 ml-1 text-(--md-outline)
+              opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
+          />
+        </h3>
+        <!-- 移动端标题（无竖条） -->
+        <h3 class="font-bold text-2xl text-(--md-on-surface) md:hidden">
+          {
+            pinned && (
+              <Icon
+                name="gravity-ui:star-fill"
+                class="inline w-4 h-4 mr-1 text-(--md-primary) align-middle"
+              />
+            )
+          }
+          {title}
+          <Icon
+            name="gravity-ui:chevron-right"
+            class="inline w-5 h-5 ml-1 text-(--md-outline)"
+          />
+        </h3>
+      </a>
+
+      <!-- 元信息 -->
+      <div
+        class="flex flex-wrap items-center gap-3 mt-2 text-sm text-(--md-on-surface-variant)"
+      >
+        <span class="flex items-center gap-1">
+          <Icon name="gravity-ui:calendar" class="w-3.5 h-3.5" />
+          {date}
+        </span>
+        {
+          categories && categories.length > 0 && (
+            <span class="flex items-center gap-1">
+              <Icon name="gravity-ui:folder" class="w-3.5 h-3.5" />
+              <a
+                href={`/categories/${categories[0]}`}
+                class="hover:text-(--md-primary) transition-colors"
+              >
+                {categories[0]}
+              </a>
+            </span>
+          )
+        }
+
+        {
+          wordCount !== undefined && (
+            <span class="flex items-center gap-1">
+              <Icon name="gravity-ui:book" class="w-3.5 h-3.5" />
+              <span class="hidden md:inline">{wordCount} 字</span>
+            </span>
+          )
+        }
+
+        {
+          readingTime !== undefined && (
+            <span class="flex items-center gap-1">
+              <Icon name="gravity-ui:clock" class="w-3.5 h-3.5" />
+              <span class="hidden md:inline">{readingTime} 分钟</span>
+            </span>
+          )
+        }
+      </div>
+
+      <!-- 简介 -->
+      <div
+        class="mt-3 mb-3.5 pr-4 text-sm text-(--md-on-surface-variant) leading-relaxed"
+      >
+        {
+          description ? (
+            <p>{description}</p>
+          ) : (
+            <p class="line-clamp-2 md:line-clamp-1" />
+          )
+        }
+      </div>
+
+      <!-- 标签胶囊 -->
+      {
+        tags && tags.length > 0 && (
+          <div class="flex flex-wrap gap-2">
+            {tags.map((tag) => (
+              <a
+                href={`/tags/${tag}`}
+                class="text-xs font-medium px-2 py-1 rounded-lg
+                bg-(--md-surface-container-low) text-(--md-on-surface-variant)
+                hover:bg-(--md-primary-container) hover:text-(--md-on-primary-container) transition-colors"
+              >
+                # {tag}
+              </a>
+            ))}
+          </div>
+        )
+      }
+    </div>
+
+    <!-- 封面图片（桌面端绝对定位右侧，移动端顶部） -->
+    {
+      hasCover && (
+        <a
+          href={`/posts/${slug}`}
+          class="group/cover relative w-full max-h-[20vh] md:max-h-none
+          md:absolute md:top-3 md:bottom-3 md:right-3 md:w-[28%]
+          rounded-xl overflow-hidden m-3 md:m-0 md:ml-0"
+        >
+          <Image
+            src={image}
+            alt={title}
+            width={400}
+            class="w-full h-full object-cover
+            group-hover/cover:scale-105 transition-transform duration-500"
+          />
+          <div
+            class="absolute inset-0 bg-black/30 opacity-0 group-hover/cover:opacity-100 transition-opacity
+          flex items-center justify-center"
+          >
+            <Icon
+              name="gravity-ui:arrow-right"
+              class="w-8 h-8 text-white scale-50 group-hover/cover:scale-100 transition-transform duration-300"
+            />
+          </div>
+        </a>
+      )
+    }
+
+    <!-- 无封面时的进入按钮（桌面端） -->
+    {
+      !hasCover && (
+        <a
+          href={`/posts/${slug}`}
+          class="hidden md:flex w-13 absolute right-3 top-3 bottom-3 rounded-xl
+          bg-(--md-surface-container-high) items-center justify-center
+          hover:bg-(--md-primary-container) active:scale-95 transition-all duration-200"
+        >
+          <Icon
+            name="gravity-ui:chevron-right"
+            class="w-7 h-7 text-(--md-primary)"
+          />
+        </a>
+      )
+    }
+  </div>
+</div>

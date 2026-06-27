@@ -22,3 +22,12 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# Claude Code
+.claude/
+
+# VSCode settings
+.vscode/
+
+# docs
+docs/

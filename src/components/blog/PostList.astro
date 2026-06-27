@@ -1,0 +1,40 @@
+---
+import type { CollectionEntry } from "astro:content";
+import type { ImageMetadata } from "astro";
+import PostCard from "./PostCard.astro";
+import { getReadingStats } from "../../utils/reading";
+import { resolveImage } from "../../utils/image";
+
+type BlogPost = CollectionEntry<"posts">;
+
+interface Props {
+  posts: BlogPost[];
+  /** 链接前缀，如 "categories/Astro" 或 "tags/java" */
+  slugPrefix: string;
+  imageModules: Record<string, { default: ImageMetadata }>;
+}
+
+const { posts, slugPrefix, imageModules } = Astro.props;
+---
+
+<div class="flex flex-col gap-4">
+  {posts.map((post: BlogPost, i: number) => {
+    const stats = getReadingStats(post.body ?? "");
+    const coverImage = resolveImage(post.data.image, imageModules);
+    return (
+      <PostCard
+        title={post.data.title}
+        date={post.data.date}
+        description={post.data.description}
+        tags={post.data.tags}
+        categories={post.data.categories}
+        image={coverImage}
+        slug={`${post.id}/${slugPrefix}`}
+        wordCount={stats.wordCount}
+        readingTime={stats.readingTime}
+        pinned={post.data.pinned}
+        index={i}
+      />
+    );
+  })}
+</div>

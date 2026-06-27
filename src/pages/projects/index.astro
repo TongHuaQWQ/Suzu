@@ -1,0 +1,255 @@
+---
+import { getCollection } from "astro:content";
+import SidebarLayout from "../../layouts/SidebarLayout.astro";
+import TabSwitcher from "../../components/ui/TabSwitcher.astro";
+import { Icon } from "astro-icon/components";
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+import { site } from "../../site.config";
+
+const imageModules = import.meta.glob<{ default: ImageMetadata }>(
+  "../../assets/**/*.{jpg,jpeg,png,webp,svg}",
+  { eager: true },
+);
+
+const projects = (await getCollection("projects")).sort(
+  (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime(),
+);
+
+// 检查项目是否有正文内容
+const projectHasContent: Record<string, boolean> = {};
+for (const project of projects) {
+  const { body } = project;
+  projectHasContent[project.id] = !!(body && body.trim().length > 0);
+}
+
+// 内置分类
+const builtInCategories = [
+  { value: "web", label: "Web Applications", icon: "mingcute:web-fill" },
+  {
+    value: "mobile",
+    label: "Mobile Applications",
+    icon: "mingcute:cellphone-2-ai-fill",
+  },
+  {
+    value: "desktop",
+    label: "Desktop Applications",
+    icon: "mingcute:computer-line",
+  },
+];
+
+// 内置状态
+const builtInStatuses = [
+  {
+    value: "completed",
+    label: "已完成",
+    color: "bg-green-500/10 text-green-600",
+  },
+  {
+    value: "in-progress",
+    label: "进行中",
+    color: "bg-yellow-500/10 text-yellow-600",
+  },
+  { value: "planned", label: "计划中", color: "bg-blue-500/10 text-blue-600" },
+];
+
+// 合并额外分类/状态
+const categories = [...builtInCategories, ...site.projects.extraCategories];
+const statuses = [...builtInStatuses, ...site.projects.extraStatuses];
+
+// 构建 Tab 列表
+const categoryTabs = [
+  {
+    id: "all",
+    label: "ALL",
+    shortLabel: "ALL",
+    icon: "mingcute:dot-grid-fill",
+    count: projects.length,
+  },
+  ...categories.map((cat) => ({
+    id: cat.value,
+    label: cat.label,
+    shortLabel: cat.value.toUpperCase(),
+    icon: cat.icon,
+    count: projects.filter((p) => p.data.category === cat.value).length,
+  })),
+];
+---
+
+<SidebarLayout title="项目">
+  <div
+    class="bg-(--md-surface-container-lowest) rounded-2xl shadow-sm p-4 md:p-9 animate-fade-up"
+  >
+    <h1
+      class="relative text-2xl font-bold text-(--md-on-surface) mb-6
+    before:content-[''] before:absolute before:-left-4 before:top-1/2 before:-translate-y-1/2
+    before:w-1 before:h-6 before:rounded-md before:bg-(--md-primary)"
+    >
+      项目
+    </h1>
+
+    <TabSwitcher tabs={categoryTabs} defaultTab="all" fullWidth>
+      {
+        categoryTabs.map((tab) => (
+          <div class="tab-panel" data-tab={tab.id}>
+            <div class="columns-1 md:columns-2 gap-5 mt-4 space-y-5">
+              {projects
+                .filter((p) => tab.id === "all" || p.data.category === tab.id)
+                .map((project, i) => {
+                  const hasImage = !!project.data.image;
+                  const coverImage = hasImage
+                    ? (imageModules[project.data.image!]?.default ?? null)
+                    : null;
+                  const hasContent = projectHasContent[project.id];
+                  const status = statuses.find(
+                    (s) => s.value === project.data.status,
+                  ) ?? {
+                    label: project.data.status,
+                    color: "bg-gray-500/10 text-gray-600",
+                  };
+
+                  return (
+                    <div
+                      class="project-card group relative rounded-xl border border-(--md-outline-variant)
+                    overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5
+                    opacity-0 animate-fade-up break-inside-avoid"
+                      style={`animation-delay: ${i * 60}ms`}
+                    >
+                      {/* 状态标签 — 始终定位在卡片右上角 */}
+                      <span
+                        class={`absolute top-3 right-3 z-10 px-2 py-0.5 text-xs font-medium rounded-md ${status.color}`}
+                      >
+                        {status.label}
+                      </span>
+
+                      {/* 图片区 */}
+                      {coverImage && (
+                        <div class="aspect-5/2 overflow-hidden relative">
+                          <Image
+                            src={coverImage}
+                            alt={project.data.title}
+                            width={600}
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                          <div
+                            class="absolute inset-0 bg-linear-to-t from-black/20 to-transparent
+                        opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                          />
+                        </div>
+                      )}
+
+                      <div class="p-4">
+                        {/* 标题 */}
+                        <h3
+                          class="text-base font-bold text-(--md-on-surface) truncate
+                      group-hover:text-(--md-primary) transition-colors duration-200"
+                        >
+                          {project.data.title}
+                        </h3>
+
+                        {/* 描述 */}
+                        {project.data.description && (
+                          <p class="mt-2 text-sm text-(--md-on-surface-variant) leading-relaxed line-clamp-2 min-h-8">
+                            {project.data.description}
+                          </p>
+                        )}
+
+                        {/* 技术栈 */}
+                        {project.data.techStack.length > 0 && (
+                          <div class="flex flex-wrap gap-1 mt-2">
+                            {project.data.techStack.map((tech) => (
+                              <span
+                                class="px-2 py-0.5 text-xs rounded-md
+                            bg-(--md-surface-container-low) text-(--md-on-surface-variant)"
+                              >
+                                {tech}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* 操作按钮 */}
+                        <div class="flex gap-1.5 mt-3">
+                          {(() => {
+                            const btns = [
+                              hasContent && "detail",
+                              (project.data.liveDemo ||
+                                project.data.visitUrl) &&
+                                "demo",
+                              project.data.sourceCode && "github",
+                            ].filter(Boolean);
+                            const multi = btns.length > 1;
+                            return (
+                              <>
+                                {hasContent && (
+                                  <a
+                                    href={`/projects/${project.id}`}
+                                    class:list={[
+                                      "flex flex-1 items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-(--md-primary-container) text-(--md-on-primary-container) hover:opacity-80 transition-opacity",
+                                    ]}
+                                  >
+                                    <Icon
+                                      name="mingcute:document-fill"
+                                      class="w-3.5 h-3.5"
+                                    />
+                                    详情
+                                  </a>
+                                )}
+                                {(project.data.liveDemo ||
+                                  project.data.visitUrl) && (
+                                  <a
+                                    href={
+                                      project.data.liveDemo ||
+                                      project.data.visitUrl
+                                    }
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class:list={[
+                                      "flex items-center justify-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg border border-(--md-outline-variant) hover:bg-(--md-surface-container-low) transition-colors",
+                                    ]}
+                                  >
+                                    <Icon
+                                      name="mingcute:external-link-line"
+                                      class="w-3.5 h-3.5"
+                                    />
+                                    演示
+                                  </a>
+                                )}
+                                {project.data.sourceCode && (
+                                  <a
+                                    href={project.data.sourceCode}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class:list={[
+                                      "flex items-center justify-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg border border-(--md-outline-variant) hover:bg-(--md-surface-container-low) transition-colors",
+                                      { "flex-1": !multi },
+                                    ]}
+                                  >
+                                    <Icon
+                                      name="mingcute:github-line"
+                                      class="w-3.5 h-3.5"
+                                    />
+                                    {!multi && "GitHub"}
+                                  </a>
+                                )}
+                              </>
+                            );
+                          })()}
+                        </div>
+                      </div>
+
+                      {/* hover 渐变覆盖 */}
+                      <div
+                        class="absolute inset-0 bg-linear-to-br from-(--md-primary)/5 to-transparent
+                    opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                      />
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        ))
+      }
+    </TabSwitcher>
+  </div>
+</SidebarLayout>

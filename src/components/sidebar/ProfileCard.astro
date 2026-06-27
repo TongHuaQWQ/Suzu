@@ -1,0 +1,57 @@
+---
+import { Image } from "astro:assets";
+import { Icon } from "astro-icon/components";
+import { site } from "../../site.config";
+
+const { name, avatar, signature } = site.profile;
+const { social } = site;
+const currentPath = Astro.url.pathname;
+const isAboutPage = currentPath === "/about" && site.featurePages.backpack;
+const avatarLink = isAboutPage ? "/backpack" : "/about";
+const avatarIcon = isAboutPage
+  ? "mingcute:backpack-line"
+  : "mingcute:idcard-line";
+---
+
+<div
+  class="bg-(--md-surface-container-lowest) rounded-2xl p-6 shadow-sm text-center"
+>
+  <a
+    href={avatarLink}
+    class="group relative block w-45 h-45 mx-auto rounded-2xl mb-4 overflow-hidden"
+  >
+    <Image
+      src={avatar}
+      alt={name}
+      width={400}
+      height={400}
+      quality={90}
+      class="w-full h-full object-cover rounded-xl"
+    />
+    <!-- 蒙版层 -->
+    <div
+      class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl"
+    >
+      <Icon name={avatarIcon} class="w-12 h-12 text-white" />
+    </div>
+  </a>
+  <h3 class="text-lg font-bold text-(--md-on-surface)">{name}</h3>
+  <p class="text-xs text-(--md-on-surface-variant) mt-2">{signature}</p>
+
+  {
+    social.length > 0 && (
+      <div class="flex justify-center gap-2 mt-4">
+        {social.map((link) => (
+          <a
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="w-9 h-9 rounded-lg bg-(--md-primary-container) text-(--md-on-primary-container) flex items-center justify-center hover:opacity-80 transition text-sm"
+          >
+            <Icon name={link.icon} class="w-5 h-5" />
+          </a>
+        ))}
+      </div>
+    )
+  }
+</div>

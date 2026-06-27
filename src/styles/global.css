@@ -1,0 +1,276 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* ── Maple Mono 字体（代码块用）── */
+@font-face {
+  font-family: 'Maple Mono';
+  src: url('/fonts/MapleMono-Regular.ttf.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Maple Mono';
+  src: url('/fonts/MapleMono-Bold.ttf.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── Material Design 3 色彩系统 ──
+   种子色: pink-400 (#f472b6)
+   生成工具: Material Theme Builder
+*/
+
+:root {
+  /* ── Primary（主色）── */
+  --md-primary: #8b2671;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #ffd7ee;
+  --md-on-primary-container: #38002d;
+
+  /* ── Secondary（辅助色）── */
+  --md-secondary: #6d5762;
+  --md-on-secondary: #ffffff;
+  --md-secondary-container: #f6dce8;
+  --md-on-secondary-container: #271620;
+
+  /* ── Tertiary（强调色）── */
+  --md-tertiary: #7c5635;
+  --md-on-tertiary: #ffffff;
+  --md-tertiary-container: #ffdcc1;
+  --md-on-tertiary-container: #2e1500;
+
+  /* ── Error（错误）── */
+  --md-error: #ba1a1a;
+  --md-on-error: #ffffff;
+  --md-error-container: #ffdad6;
+  --md-on-error-container: #410002;
+
+  /* ── Surface（表面）── */
+  --md-surface: #fff8f8;
+  --md-on-surface: #22191d;
+  --md-on-surface-variant: #524148;
+  --md-outline: #847379;
+  --md-outline-variant: #d6c1c8;
+
+  /* ── Surface Container（卡片/组件背景）── */
+  --md-surface-container-lowest: #ffffff;
+  --md-surface-container-low: #f7f2f4;
+  --md-surface-container: #f1ecf0;
+  --md-surface-container-high: #f3e5e8;
+  --md-surface-container-highest: #ede0e2;
+}
+
+/* ── 页面进入动画 ── */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.4s ease-out both;
+}
+
+/* ── 卡片左滑淡入动画── */
+@keyframes fade-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in-left {
+  animation: fade-in-left 0.4s ease-out both;
+}
+
+
+/* ── 标题锚点── */
+.page-content > h1:first-child {
+  position: relative;
+}
+
+.page-content > h1:first-child::before {
+  content: '';
+  position: absolute;
+  left: -1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0.25rem;
+  height: 1.5rem;
+  border-radius: 0.375rem;
+  background: var(--md-primary);
+}
+
+.prose h2,
+.prose h3,
+.prose h4 {
+  position: relative;
+}
+
+
+.prose :not(pre) > code {
+  background: var(--md-surface-container-high);
+  color: var(--md-primary);
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.375rem;
+  font-size: 0.875em;
+  font-family: 'Maple Mono', monospace;
+  word-break: break-word;
+}
+
+.prose :not(pre) > code::before,
+.prose :not(pre) > code::after {
+  content: none;
+}
+
+/* ── 表格样式 ── */
+.prose table {
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--md-outline-variant);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  width: 100%;
+  font-size: 0.875rem;
+}
+
+.prose thead {
+  background: var(--md-surface-container-high);
+}
+
+.prose th {
+  padding: 0.6rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--md-on-surface);
+  border-bottom: 1px solid var(--md-outline-variant);
+}
+
+.prose td {
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--md-outline-variant);
+  color: var(--md-on-surface-variant);
+}
+
+.prose tr:last-child td {
+  border-bottom: none;
+}
+
+.prose tr:hover td {
+  background: var(--md-surface-container);
+}
+
+/* ── 任务列表样式 ── */
+.prose .task-list-item {
+  list-style: none;
+  margin-left: -1.5rem;
+}
+
+.prose .task-list-item input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid var(--md-outline);
+  border-radius: 0.25rem;
+  vertical-align: middle;
+  margin-right: 0.5rem;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.prose .task-list-item input[type="checkbox"]:checked {
+  background: var(--md-primary);
+  border-color: var(--md-primary);
+}
+
+.prose .task-list-item input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  top: 0.1rem;
+  left: 0.3rem;
+  width: 0.35rem;
+  height: 0.6rem;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.prose .task-list-item input[type="checkbox"]:checked + * {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+.prose h1 .heading-anchor,
+.prose h2 .heading-anchor,
+.prose h3 .heading-anchor,
+.prose h4 .heading-anchor {
+  opacity: 0;
+  margin-left: 0.5rem;
+  color: var(--md-primary);
+  text-decoration: none;
+  font-weight: 400;
+  transition: opacity 0.2s;
+}
+
+.prose h1:hover .heading-anchor,
+.prose h2:hover .heading-anchor,
+.prose h3:hover .heading-anchor,
+.prose h4:hover .heading-anchor {
+  opacity: 0.5;
+}
+
+.prose h1 .heading-anchor:hover,
+.prose h2 .heading-anchor:hover,
+.prose h3 .heading-anchor:hover,
+.prose h4 .heading-anchor:hover {
+  opacity: 1;
+}
+
+/* ── Markdown 内容排版（MD3 适配）── */
+/* 用法：容器同时加 prose prose-md */
+.prose-md {
+  --tw-prose-headings: var(--md-on-surface);
+  --tw-prose-links: var(--md-primary);
+  --tw-prose-bold: var(--md-on-surface);
+  --tw-prose-code: var(--md-primary);
+  --tw-prose-borders: var(--md-outline-variant);
+  --tw-prose-counters: var(--md-on-surface-variant);
+  --tw-prose-bullets: var(--md-primary);
+  --tw-prose-hr: var(--md-outline-variant);
+  --tw-prose-quote-borders: var(--md-primary);
+  color: var(--md-on-surface-variant);
+}
+
+/* ── 正文链接 hover 圆角背景 ── */
+.prose :not(pre):not(table) > a:not(.heading-anchor):not([class~="not-prose"]) {
+  text-decoration: none;
+  padding: 0.15rem 0.45rem;
+  margin: -0.15rem -0.45rem;
+  border-radius: 0.375rem;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.prose :not(pre):not(table) > a:not(.heading-anchor):not([class~="not-prose"]):hover {
+  background: var(--md-surface-container-high);
+  color: var(--md-on-primary-container);
+}
+
+.prose-md :where(a):not(:where([class~="not-prose"], [class~="not-prose"] *)):hover {
+  color: var(--md-on-primary-container);
+}

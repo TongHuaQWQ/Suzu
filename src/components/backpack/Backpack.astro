@@ -1,0 +1,76 @@
+---
+import { Image } from "astro:assets";
+
+interface Props {
+  items: {
+    title: string;
+    description: string;
+    year: number;
+    status: string;
+    image?: ImageMetadata | null;
+    slug: string;
+    reason?: string;
+  }[];
+}
+
+const { items } = Astro.props;
+---
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+  {items.map((item) => (
+    <a
+      href={`/backpack/${item.slug}`}
+      class="group block bg-(--md-surface-container-lowest) rounded-2xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+    >
+      <div class="flex items-center gap-5">
+        <!-- 左侧：图片（有图片才显示） -->
+        {item.image && (
+          <Image
+            src={item.image}
+            alt={item.title}
+            width={96}
+            height={96}
+            class="shrink-0 rounded-xl object-cover"
+          />
+        )}
+
+        <!-- 右侧：文字区（三行结构） -->
+        <div class="flex-1 min-w-0">
+          <!-- 第一行：标题 + 年份 -->
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="text-lg font-bold text-(--md-on-surface) truncate">
+              {item.title}
+            </h3>
+            <span class="text-xs text-(--md-on-surface-variant) whitespace-nowrap">
+              {item.year}年
+            </span>
+          </div>
+
+          <!-- 第二行：描述 -->
+          <p class="mt-1 text-sm text-(--md-on-surface-variant) leading-relaxed line-clamp-2">
+            {item.description}
+          </p>
+
+          <!-- 第三行：虚线 + 底部信息 -->
+          <div class="mt-2 pt-2 border-t border-dashed border-(--md-outline-variant)">
+            <div class="flex items-center justify-between">
+              <p class="text-xs text-(--md-on-surface-variant)/70">
+                {item.reason || "状态更新中..."}
+              </p>
+              <span
+                class:list={[
+                  "px-2 py-0.5 rounded-full text-xs font-medium",
+                  item.status === "使用中"
+                    ? "bg-green-100 text-green-700"
+                    : "bg-(--md-surface-container-high) text-(--md-on-surface-variant)",
+                ]}
+              >
+                {item.status}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </a>
+  ))}
+</div>

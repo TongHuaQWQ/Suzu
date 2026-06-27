@@ -1,0 +1,297 @@
+---
+import { getCollection, render } from "astro:content";
+import { Image } from "astro:assets";
+import { Icon } from "astro-icon/components";
+import type { ImageMetadata, MarkdownHeading } from "astro";
+import SidebarLayout from "../../layouts/SidebarLayout.astro";
+import License from "../../components/blog/License.astro";
+import Backlinks from "../../components/blog/Backlinks.astro";
+import PostMeta from "../../components/blog/PostMeta.astro";
+import PostNav from "../../components/blog/PostNav.astro";
+import { getReadingStats } from "../../utils/reading";
+import { buildGraphData } from "../../utils/graph";
+import { site } from "../../site.config";
+
+// 图片解析
+const imageModules = import.meta.glob<{ default: ImageMetadata }>(
+  "../../assets/**/*.{jpg,jpeg,png,webp,svg}",
+  { eager: true },
+);
+
+export async function getStaticPaths() {
+  const posts = await getCollection("posts");
+
+  // 统一排序函数
+  function sortPosts(list: typeof posts) {
+    const pinned = list
+      .filter((p) => p.data.pinned)
+      .sort(
+        (a, b) =>
+          new Date(b.data.date).getTime() - new Date(a.data.date).getTime(),
+      );
+    const normal = list
+      .filter((p) => !p.data.pinned)
+      .sort(
+        (a, b) =>
+          new Date(b.data.date).getTime() - new Date(a.data.date).getTime(),
+      );
+    return [...pinned, ...normal];
+  }
+
+  // 全局排序（首页）
+  const globalSorted = sortPosts(posts);
+
+  // 按分类排序
+  const categoryMap = new Map<string, typeof posts>();
+  posts.forEach((p) =>
+    (p.data.categories ?? []).forEach((c) => {
+      if (!categoryMap.has(c)) categoryMap.set(c, []);
+      categoryMap.get(c)!.push(p);
+    }),
+  );
+
+  // 按标签排序
+  const tagMap = new Map<string, typeof posts>();
+  posts.forEach((p) =>
+    (p.data.tags ?? []).forEach((t) => {
+      if (!tagMap.has(t)) tagMap.set(t, []);
+      tagMap.get(t)!.push(p);
+    }),
+  );
+
+  const paths: Array<{
+    params: { slug: string };
+    props: {
+      postId: string;
+      prevId: string | null;
+      nextId: string | null;
+    };
+  }> = [];
+
+  // 首页上下文：/posts/[slug]
+  globalSorted.forEach((post, i) => {
+    paths.push({
+      params: { slug: post.id },
+      props: {
+        postId: post.id,
+        prevId: i < globalSorted.length - 1 ? globalSorted[i + 1].id : null,
+        nextId: i > 0 ? globalSorted[i - 1].id : null,
+      },
+    });
+  });
+
+  // 分类上下文：/posts/[slug]/categories/[category]
+  for (const [category, catPosts] of categoryMap) {
+    const sorted = sortPosts(catPosts);
+    sorted.forEach((post, i) => {
+      paths.push({
+        params: { slug: `${post.id}/categories/${category}` },
+        props: {
+          postId: post.id,
+          prevId: i < sorted.length - 1 ? sorted[i + 1].id : null,
+          nextId: i > 0 ? sorted[i - 1].id : null,
+        },
+      });
+    });
+  }
+
+  // 标签上下文：/posts/[slug]/tags/[tag]
+  for (const [tag, tagPosts] of tagMap) {
+    const sorted = sortPosts(tagPosts);
+    sorted.forEach((post, i) => {
+      paths.push({
+        params: { slug: `${post.id}/tags/${tag}` },
+        props: {
+          postId: post.id,
+          prevId: i < sorted.length - 1 ? sorted[i + 1].id : null,
+          nextId: i > 0 ? sorted[i - 1].id : null,
+        },
+      });
+    });
+  }
+
+  return paths;
+}
+
+// 通过 postId 查找文章数据
+const { postId, prevId, nextId } = Astro.props;
+const allPosts = await getCollection("posts");
+const post = allPosts.find((p) => p.id === postId)!;
+const prev = prevId ? (allPosts.find((p) => p.id === prevId) ?? null) : null;
+const next = nextId ? (allPosts.find((p) => p.id === nextId) ?? null) : null;
+
+const { Content, headings } = await render(post);
+const tocHeadings = headings as MarkdownHeading[];
+const stats = getReadingStats(post.body ?? "");
+
+// 图谱数据
+const graphData = site.features.graph ? await buildGraphData() : null;
+const currentBacklinks = graphData?.backlinks[postId] ?? [];
+const currentOutgoing = graphData?.outgoing[postId] ?? [];
+const linkTitles: Record<string, string> = {};
+if (graphData) {
+  for (const node of graphData.nodes) {
+    linkTitles[node.id] = node.title;
+  }
+}
+
+// 解析封面图
+const coverImage = post.data.image
+  ? (imageModules[post.data.image]?.default ?? null)
+  : null;
+---
+
+<SidebarLayout
+  title={post.data.title}
+  headings={tocHeadings}
+  graphNodes={graphData?.nodes}
+  graphEdges={graphData?.edges}
+  currentSlug={`/posts/${post.id}`}
+>
+  <article
+    class="bg-(--md-surface-container-lowest) rounded-2xl shadow-sm overflow-hidden animate-fade-up"
+  >
+    <!-- 封面图 -->
+    {
+      coverImage && (
+        <div class="relative w-full h-48 md:h-64 overflow-hidden">
+          <Image
+            src={coverImage}
+            alt={post.data.title}
+            width={1200}
+            class="w-full h-full object-cover"
+          />
+          <div class="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
+        </div>
+      )
+    }
+
+    <!-- 内容区 -->
+    <div class="article-content pl-6 md:pl-9 pr-6 md:pr-9 pt-7 pb-8">
+      <!-- 标题 -->
+      <h1
+        class="relative font-bold text-3xl md:text-4xl text-(--md-on-surface)
+        before:content-[''] before:absolute before:-left-4 before:top-1/2 before:-translate-y-1/2
+        before:w-1 before:h-6 before:rounded-md before:bg-(--md-primary)
+        hidden md:block"
+      >
+        {post.data.title}
+      </h1>
+      <h1 class="font-bold text-3xl text-(--md-on-surface) md:hidden">
+        {post.data.title}
+      </h1>
+
+      <!-- 元信息 -->
+      <div
+        class="flex flex-wrap items-center gap-3 mt-3 text-sm text-(--md-on-surface-variant)"
+      >
+        <span class="flex items-center gap-1">
+          <Icon name="mingcute:calendar-line" class="w-5.5 h-5.5" />
+          {post.data.date}
+        </span>
+        {
+          post.data.categories && post.data.categories.length > 0 && (
+            <a
+              href={`/categories/${post.data.categories[0]}`}
+              class="flex items-center gap-1 hover:text-(--md-primary) transition-colors"
+            >
+              <Icon name="gravity-ui:folder" class="w-5.5 h-5.5" />
+              {post.data.categories[0]}
+            </a>
+          )
+        }
+        <div class="flex items-center">
+          {
+            post.data.tags &&
+              post.data.tags.length > 0 &&
+              post.data.tags.map((tag, i) => (
+                <>
+                  {i === 0 && (
+                    <Icon name="gravity-ui:hashtag" class="w-5.5 h-5.5" />
+                  )}
+                  <div class="flex items-center">
+                    {i > 0 && <span class="opacity-30 mx-0.5">/</span>}
+                    <a
+                      href={`/tags/${tag}`}
+                      class="hover:text-(--md-primary) transition-colors"
+                    >
+                      {tag}
+                    </a>
+                  </div>
+                </>
+              ))
+          }
+        </div>
+      </div>
+
+      <!-- 字数 & 阅读时间 -->
+      <div
+        class="flex flex-wrap items-center gap-3 mt-4 text-xs text-(--md-on-surface-variant)"
+      >
+        <div class="flex items-center gap-1">
+          <Icon name="gravity-ui:book" class="w-4 h-4" />
+          <span class="flex items-center gap-1 opacity-60">
+            {stats.wordCount} 字
+          </span>
+        </div>
+        <div class="flex items-center gap-1">
+          <Icon name="gravity-ui:clock" class="w-4 h-4" />
+          <span class="flex items-center gap-1 opacity-60">
+            {stats.readingTime} 分钟
+          </span>
+        </div>
+      </div>
+
+      <!-- 分隔线 -->
+      <div
+        class="mt-6 mb-8 border-t border-dashed border-(--md-outline-variant)"
+      >
+      </div>
+
+      <!-- 正文 -->
+      <div
+        class="prose prose-md max-w-none leading-relaxed
+        prose-h1:text-3xl prose-h1:md:text-4xl
+        prose-li:marker:text-(--md-primary)"
+      >
+        <Content />
+      </div>
+
+      <!-- 版权声明 -->
+      {
+        site.license.enable && (
+          <div class="mt-8">
+            <License title={post.data.title} date={post.data.date} />
+          </div>
+        )
+      }
+
+      <!-- 引用链接 -->
+      {
+        site.features.backlinks && (currentBacklinks.length > 0 || currentOutgoing.length > 0) && (
+          <div class="mt-6">
+            <Backlinks
+              backlinks={currentBacklinks}
+              outgoing={currentOutgoing}
+              titles={linkTitles}
+            />
+          </div>
+        )
+      }
+    </div>
+  </article>
+  <!-- 底部两卡片 -->
+  <div class="mt-4 space-y-4">
+    {site.features.postMeta && <PostMeta date={post.data.date} />}
+    {
+      site.features.postNav && (
+        <PostNav
+          prevId={prev?.id}
+          nextId={next?.id}
+          prevTitle={prev?.data.title}
+          nextTitle={next?.data.title}
+        />
+      )
+    }
+  </div>
+</SidebarLayout>

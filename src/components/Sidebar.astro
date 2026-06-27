@@ -1,0 +1,52 @@
+---
+import type { MarkdownHeading } from "astro";
+import type { GraphNode, GraphEdge } from "../utils/graph";
+import { getCollection } from "astro:content";
+import { site } from "../site.config";
+import ProfileCard from "./sidebar/ProfileCard.astro";
+import CategoryCard from "./sidebar/CategoryCard.astro";
+import TagCard from "./sidebar/TagCard.astro";
+import TocCard from "./sidebar/TocCard.astro";
+import GraphCard from "./sidebar/GraphCard.astro";
+
+interface Props {
+  headings?: MarkdownHeading[];
+  graphNodes?: GraphNode[];
+  graphEdges?: GraphEdge[];
+  currentSlug?: string;
+}
+
+const { headings, graphNodes, graphEdges, currentSlug } = Astro.props;
+
+const posts = await getCollection("posts");
+
+// 分类及数量统计
+const categoryCountMap = new Map<string, number>();
+posts.forEach((p) =>
+  (p.data.categories ?? []).forEach((c) =>
+    categoryCountMap.set(c, (categoryCountMap.get(c) ?? 0) + 1),
+  ),
+);
+const allCategories = [...categoryCountMap.entries()];
+
+const allTags = [...new Set(posts.flatMap((p) => p.data.tags ?? []))];
+---
+
+<!-- 以上固定，以下滚动 -->
+<div class="space-y-4 mb-4">
+  <ProfileCard />
+  {
+    site.features.graph && graphNodes && graphNodes.length > 0 && (
+      <GraphCard
+        nodes={graphNodes}
+        edges={graphEdges ?? []}
+        currentSlug={currentSlug}
+      />
+    )
+  }
+  <CategoryCard categories={allCategories} />
+  <TagCard tags={allTags} />
+</div>
+<div class="lg:sticky lg:top-6">
+  {headings && headings.length > 0 && <TocCard headings={headings} />}
+</div>

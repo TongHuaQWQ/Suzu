@@ -1,0 +1,143 @@
+---
+import { getCollection, render } from "astro:content";
+import SidebarLayout from "../../layouts/SidebarLayout.astro";
+import { Icon } from "astro-icon/components";
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+import { site } from "../../site.config";
+
+const imageModules = import.meta.glob<{ default: ImageMetadata }>(
+  "../../assets/**/*.{jpg,jpeg,png,webp,svg}",
+  { eager: true },
+);
+
+export async function getStaticPaths() {
+  const projects = await getCollection("projects");
+  return projects.map((project) => ({
+    params: { slug: project.id },
+    props: { project },
+  }));
+}
+
+const { project } = Astro.props;
+const { Content, headings } = await render(project);
+
+const hasImage = !!project.data.image;
+const coverImage = hasImage
+  ? (imageModules[project.data.image!]?.default ?? null)
+  : null;
+const categories = [
+  { value: "web", label: "Web Applications" },
+  { value: "mobile", label: "Mobile Applications" },
+  { value: "desktop", label: "Desktop Applications" },
+  ...site.projects.extraCategories,
+];
+const statuses = [
+  { value: "completed", label: "已完成", color: "bg-green-500/10 text-green-600" },
+  { value: "in-progress", label: "进行中", color: "bg-yellow-500/10 text-yellow-600" },
+  { value: "planned", label: "计划中", color: "bg-blue-500/10 text-blue-600" },
+  ...site.projects.extraStatuses,
+];
+const status = statuses.find(s => s.value === project.data.status)
+  ?? { label: project.data.status, color: "bg-gray-500/10 text-gray-600" };
+const categoryLabel = categories.find(c => c.value === project.data.category)?.label ?? project.data.category;
+---
+
+<SidebarLayout title={project.data.title} headings={headings}>
+  <article class="bg-(--md-surface-container-lowest) rounded-2xl shadow-sm overflow-hidden animate-fade-up">
+    {/* 封面图 */}
+    {coverImage && (
+      <div class="relative w-full h-48 md:h-64 overflow-hidden">
+        <Image
+          src={coverImage}
+          alt={project.data.title}
+          width={1200}
+          class="w-full h-full object-cover"
+        />
+        <div class="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
+      </div>
+    )}
+
+    <div class="article-content pl-6 md:pl-9 pr-6 md:pr-9 pt-7 pb-8">
+      {/* 标题 */}
+      <h1 class="relative font-bold text-3xl md:text-4xl text-(--md-on-surface)
+        before:content-[''] before:absolute before:-left-4 before:top-1/2 before:-translate-y-1/2
+        before:w-1 before:h-6 before:rounded-md before:bg-(--md-primary)
+        hidden md:block">
+        {project.data.title}
+      </h1>
+      <h1 class="font-bold text-3xl text-(--md-on-surface) md:hidden">
+        {project.data.title}
+      </h1>
+
+      {/* 元信息 */}
+      <div class="flex flex-wrap items-center gap-3 mt-3 text-sm text-(--md-on-surface-variant)">
+        <span class="flex items-center gap-1">
+          <Icon name="gravity-ui:calendar" class="w-3.5 h-3.5" />
+          {project.data.date}
+        </span>
+        <span class="flex items-center gap-1">
+          <Icon name="gravity-ui:folder" class="w-3.5 h-3.5" />
+          {categoryLabel}
+        </span>
+        <span class={`px-2 py-0.5 text-xs font-medium rounded-md ${status.color}`}>
+          {status.label}
+        </span>
+      </div>
+
+      {/* 技术栈 */}
+      {project.data.techStack.length > 0 && (
+        <div class="flex flex-wrap gap-2 mt-4">
+          {project.data.techStack.map((tech) => (
+            <span class="px-2.5 py-1 text-xs rounded-lg
+            bg-(--md-surface-container-low) text-(--md-on-surface-variant)">
+              {tech}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* 链接按钮 */}
+      {(project.data.liveDemo || project.data.visitUrl || project.data.sourceCode) && (
+        <div class="flex flex-wrap gap-2 mt-4">
+          {(project.data.liveDemo || project.data.visitUrl) && (
+            <a
+              href={project.data.liveDemo || project.data.visitUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-xl
+              bg-(--md-primary-container) text-(--md-on-primary-container)
+              hover:opacity-80 transition-opacity"
+            >
+              <Icon name="gravity-ui:link" class="w-4 h-4" />
+              在线演示
+            </a>
+          )}
+          {project.data.sourceCode && (
+            <a
+              href={project.data.sourceCode}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-xl
+              border border-(--md-outline-variant)
+              hover:bg-(--md-surface-container-low) transition-colors"
+            >
+              <Icon name="mingcute:github-line" class="w-4 h-4" />
+              源代码
+            </a>
+          )}
+        </div>
+      )}
+
+      {/* 分隔线 */}
+      <div class="mt-6 mb-8 border-t border-dashed border-(--md-outline-variant)"></div>
+
+      {/* 正文 */}
+      <div class="prose prose-md max-w-none leading-relaxed
+        prose-h1:text-3xl prose-h1:md:text-4xl
+        prose-li:marker:text-(--md-primary)">
+        <Content />
+      </div>
+    </div>
+  </article>
+</SidebarLayout>

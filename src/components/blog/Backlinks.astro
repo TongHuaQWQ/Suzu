@@ -1,0 +1,56 @@
+---
+import { Icon } from "astro-icon/components";
+import TabSwitcher from "../ui/TabSwitcher.astro";
+
+interface Props {
+  backlinks: string[];
+  outgoing: string[];
+  titles: Record<string, string>;
+}
+
+const { backlinks, outgoing, titles } = Astro.props;
+const hasBacklinks = backlinks.length > 0;
+const hasOutgoing = outgoing.length > 0;
+
+const tabs = [];
+if (hasOutgoing) tabs.push({ id: "outgoing", label: "引用", icon: "gravity-ui:arrow-right", count: outgoing.length });
+if (hasBacklinks) tabs.push({ id: "backlinks", label: "被引用", icon: "gravity-ui:link", count: backlinks.length });
+const defaultTab = hasBacklinks ? "backlinks" : "outgoing";
+---
+
+{(hasBacklinks || hasOutgoing) && (
+  <div class="rounded-xl p-5 bg-(--md-surface-container-low)">
+    <TabSwitcher tabs={tabs} defaultTab={defaultTab}>
+      {hasOutgoing && (
+        <div class="tab-panel" data-tab="outgoing">
+          <div class="space-y-1.5">
+            {outgoing.map((slug) => (
+              <a
+                href={`/posts/${slug}`}
+                class="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-(--md-on-surface-variant) hover:bg-(--md-surface-container) transition-colors"
+              >
+                <Icon name="gravity-ui:arrow-right" class="w-3.5 h-3.5 text-(--md-primary) shrink-0" />
+                <span class="truncate">{titles[slug] || slug}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+      {hasBacklinks && (
+        <div class="tab-panel" data-tab="backlinks">
+          <div class="space-y-1.5">
+            {backlinks.map((slug) => (
+              <a
+                href={`/posts/${slug}`}
+                class="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-(--md-on-surface-variant) hover:bg-(--md-surface-container) transition-colors"
+              >
+                <Icon name="gravity-ui:arrow-right" class="w-3.5 h-3.5 text-(--md-primary) shrink-0" />
+                <span class="truncate">{titles[slug] || slug}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </TabSwitcher>
+  </div>
+)}
