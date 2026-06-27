@@ -18,7 +18,6 @@ const {
 
 const canonicalURL = new URL(Astro.url.pathname, site.url);
 const ogImageURL = new URL(image, site.url);
-const githubToken = import.meta.env.GITHUB_TOKEN || "";
 ---
 
 <!doctype html>
@@ -49,7 +48,7 @@ const githubToken = import.meta.env.GITHUB_TOKEN || "";
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageURL} />
   </head>
-  <body class="bg-(--md-surface) min-h-screen" data-github-token={githubToken}>
+  <body class="bg-(--md-surface) min-h-screen">
     <div class="max-w-6xl mx-auto px-4 mt-6 flex flex-col gap-6">
       <Navigation />
       <main>

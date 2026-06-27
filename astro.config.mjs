@@ -9,9 +9,15 @@ import expressiveCode from 'astro-expressive-code';
 import { remarkHeadingAnchor } from './src/plugins/remark-heading-anchor';
 import { remarkWikilink } from './src/plugins/remark-wikilink';
 import { remarkGithubCard } from './src/plugins/remark-github-card';
+import { generateGitHubCache } from './src/utils/github';
 import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers'
 import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections'
 import { pluginLanguageBadge } from 'expressive-code-language-badge';
+
+// 构建时预取 GitHub 仓库数据
+
+// 构建前预取 GitHub 仓库数据
+await generateGitHubCache();
 
 // https://astro.build/config
 export default defineConfig({

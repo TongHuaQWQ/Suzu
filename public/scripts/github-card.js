@@ -1,28 +1,23 @@
 /**
  * GitHub 仓库卡片 Web Component（Fuwari 风格）
- * 带 localStorage 缓存（1 小时）
+ * 优先读取构建时生成的 github-cache.json
+ * 缓存中无数据时回退到客户端 API 请求
  */
 
 if (typeof HTMLElement !== 'undefined') {
 
-const CACHE_KEY = "github-repo-cache";
-const CACHE_TTL = 3600000;
+let cacheData = null;
 
-function getCache(repo) {
+async function loadCache() {
+  if (cacheData) return cacheData;
   try {
-    const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || "{}");
-    const entry = cache[repo];
-    if (entry && Date.now() - entry.time < CACHE_TTL) return entry.data;
-  } catch (e) {}
-  return null;
-}
-
-function setCache(repo, data) {
-  try {
-    const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || "{}");
-    cache[repo] = { data, time: Date.now() };
-    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-  } catch (e) {}
+    const res = await fetch('/github-cache.json');
+    if (!res.ok) throw new Error('No cache');
+    cacheData = await res.json();
+  } catch {
+    cacheData = {};
+  }
+  return cacheData;
 }
 
 function fmt(n) {
@@ -30,14 +25,26 @@ function fmt(n) {
 }
 
 class GithubCard extends HTMLElement {
-  connectedCallback() {
+  async connectedCallback() {
     const repo = this.getAttribute("repo");
     if (!repo || !repo.includes("/")) return;
     const [owner, name] = repo.split("/");
-    this.renderPlaceholder(owner, name);
-    const cached = getCache(repo);
-    if (cached) { this.renderCard(cached); return; }
-    this.fetchRepo(repo);
+
+    // 优先读取构建缓存
+    const cache = await loadCache();
+    const data = cache[repo];
+
+    if (data) {
+      this.renderCard(data);
+    } else if (cache[repo] === null) {
+      // 缓存明确为 null —— 构建时没取到数据，走客户端备用
+      this.renderPlaceholder(owner, name);
+      this.fetchRepo(repo);
+    } else {
+      // 缓存里根本没有这个 repo（用户可能是新增的），走客户端
+      this.renderPlaceholder(owner, name);
+      this.fetchRepo(repo);
+    }
   }
 
   renderPlaceholder(owner, name) {
@@ -61,13 +68,11 @@ class GithubCard extends HTMLElement {
   }
 
   fetchRepo(repo) {
-    const TOKEN = document.body.dataset.githubToken || "";
-    const headers = { Accept: "application/vnd.github.v3+json" };
-    if (TOKEN) headers.Authorization = "Bearer " + TOKEN;
-
-    fetch("https://api.github.com/repos/" + repo, { headers })
+    fetch(`https://api.github.com/repos/${repo}`, {
+      headers: { Accept: "application/vnd.github.v3+json" },
+    })
       .then(r => r.ok ? r.json() : Promise.reject())
-      .then(d => { setCache(repo, d); this.renderCard(d); })
+      .then(d => this.renderCard(d))
       .catch(() => { this.classList.add("gc-error"); });
   }
 
@@ -91,8 +96,8 @@ class GithubCard extends HTMLElement {
         </div>
         <div class="gc-desc">${d.description || "No description"}</div>
         <div class="gc-infobar">
-          <span class="gc-stars">${fmt(d.stargazers_count)}</span>
-          <span class="gc-forks">${fmt(d.forks_count)}</span>
+          <span class="gc-stars">${fmt(d.stargazers_count || 0)}</span>
+          <span class="gc-forks">${fmt(d.forks_count || 0)}</span>
           <span class="gc-license">${license}</span>
         </div>
       </a>`;
