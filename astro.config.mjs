@@ -13,6 +13,7 @@ import { generateGitHubCache } from './src/utils/github';
 import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers'
 import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections'
 import { pluginLanguageBadge } from 'expressive-code-language-badge';
+import { site } from './src/site.config.ts';
 
 // 构建时预取 GitHub 仓库数据
 
@@ -66,6 +67,7 @@ export default defineConfig({
       hastPlugins: [remarkHeadingAnchor(), remarkWikilink()],
     }),
   },
+  site: site.url,
   devToolbar: {
     enabled: false
   }

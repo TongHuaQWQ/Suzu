@@ -2,7 +2,7 @@ export const site = {
   // ── 基本信息 ──
   title: "Suzu",
   description: "我的个人博客",
-  url: "https://suzu.example.com", // 部署后替换
+  url: "https://suzu.24862648.xyz/", // 部署后替换
   lang: "zh-CN",
 
   // ── 个人信息 ──

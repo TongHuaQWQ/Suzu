@@ -7,7 +7,6 @@ interface Props {
   date: string;
   author?: string;
 }
-
 const { title, date, author } = Astro.props;
 const authorName = author || site.profile.name;
 const postUrl = decodeURIComponent(Astro.url.toString());
