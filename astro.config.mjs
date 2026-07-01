@@ -55,15 +55,7 @@ export default defineConfig({
       },
     },
   }), icon(), mdx(), sitemap({
-    filter: (page) => {
-      const u = new URL(page);
-      const path = u.pathname;
-      if (path.startsWith('/posts/') && path !== '/posts/') {
-        const rest = path.replace(/^\/posts\//, '').replace(/\/$/, '');
-        return !rest.includes('/');
-      }
-      return true;
-    },
+    filter: (page) => !/\/posts\/.+\/.+/.test(new URL(page).pathname),
   })],
   vite: {
     plugins: [tailwindcss()]
