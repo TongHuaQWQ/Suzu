@@ -54,7 +54,17 @@ export default defineConfig({
         borderRadius: '0.375rem',
       },
     },
-  }), icon(), mdx(), sitemap()],
+  }), icon(), mdx(), sitemap({
+    filter: (page) => {
+      const u = new URL(page);
+      const path = u.pathname;
+      if (path.startsWith('/posts/') && path !== '/posts/') {
+        const rest = path.replace(/^\/posts\//, '').replace(/\/$/, '');
+        return !rest.includes('/');
+      }
+      return true;
+    },
+  })],
   vite: {
     plugins: [tailwindcss()]
   },
