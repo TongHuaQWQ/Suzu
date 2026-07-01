@@ -1,6 +1,7 @@
 ---
 title: "MDX 写作指南"
 date: "2026-06-13"
+pubDate: "2026-06-13"
 description: "本博客支持的 Markdown / MDX 语法一览"
 image: "../../assets/posts/2026.jpg"
 tags: ["Markdown", "MDX", "教程"]

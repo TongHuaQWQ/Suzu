@@ -15,6 +15,8 @@ import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-s
 import { pluginLanguageBadge } from 'expressive-code-language-badge';
 import { site } from './src/site.config.ts';
 
+import sitemap from '@astrojs/sitemap';
+
 // 构建时预取 GitHub 仓库数据
 
 // 构建前预取 GitHub 仓库数据
@@ -25,38 +27,34 @@ export default defineConfig({
   image: {
     domains: ["q.qlogo.cn"],
   },
-  integrations: [
-    expressiveCode({
-      themes: ['catppuccin-latte'],
+  integrations: [expressiveCode({
+    themes: ['catppuccin-latte'],
 
-      plugins: [
-        pluginLineNumbers(),
-        pluginCollapsibleSections(),
-        pluginLanguageBadge({
-          textTransform: 'lowercase',
-          excludeLanguages: ['txt'],
-        }),
-      ],
-      defaultProps: {
-        wrap: true,
-        collapseStyle: 'collapsible-start',
-      },
-      styleOverrides: {
-        borderRadius: '0.75rem',
+    plugins: [
+      pluginLineNumbers(),
+      pluginCollapsibleSections(),
+      pluginLanguageBadge({
+        textTransform: 'lowercase',
+        excludeLanguages: ['txt'],
+      }),
+    ],
+    defaultProps: {
+      wrap: true,
+      collapseStyle: 'collapsible-start',
+    },
+    styleOverrides: {
+      borderRadius: '0.75rem',
 
-        codeFontFamily: "'Maple Mono', monospace",
-        languageBadge: {
-          fontSize: '0.7rem',
-          fontColor: '#8b2671',
-          fontWeight: '500',
-          background: '#ffd7ee',
-          borderRadius: '0.375rem',
-        },
+      codeFontFamily: "'Maple Mono', monospace",
+      languageBadge: {
+        fontSize: '0.7rem',
+        fontColor: '#8b2671',
+        fontWeight: '500',
+        background: '#ffd7ee',
+        borderRadius: '0.375rem',
       },
-    }),
-    icon(),
-    mdx(),
-  ],
+    },
+  }), icon(), mdx(), sitemap()],
   vite: {
     plugins: [tailwindcss()]
   },
@@ -69,6 +67,6 @@ export default defineConfig({
   },
   site: site.url,
   devToolbar: {
-    enabled: false
+    enabled: true
   }
 });

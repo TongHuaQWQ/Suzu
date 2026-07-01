@@ -1,0 +1,49 @@
+---
+import pkg from "../../../package.json";
+import { site } from "../../site.config";
+const siteName = pkg.name;
+const siteVersion = pkg.version;
+const currentYear = new Date().getFullYear();
+---
+
+<footer
+  class="mt-16 pt-8 border-t border-dashed border-neutral-200 dark:border-neutral-700 text-center text-[0.9rem]"
+>
+  <!-- 第一行：版权 & RSS / Atom -->
+  <p class="mb-1 text-neutral-500 dark:text-neutral-400">
+    © {currentYear}
+    {site.profile.name} All Rights Reserved. /&nbsp;
+    <a href="/rss.xml" class="text-(--md-primary)">RSS</a> /&nbsp;
+    <a href="/atom.xml" class="text-(--md-primary)">Atom</a>
+  </p>
+
+  <!-- 第二行：Sitemap -->
+  <p class="mb-3 text-neutral-500 dark:text-neutral-400">
+    <a href="/sitemap" class="text-(--md-primary)">Sitemap</a>
+  </p>
+
+  <!-- 第三行：Powered by -->
+  <p class="text-neutral-400 dark:text-neutral-500 text-[0.85rem]">
+    Powered by &nbsp;
+    <a
+      href="https://astro.build"
+      target="_blank"
+      rel="noopener"
+      class="text-(--md-primary)">Astro</a
+    >
+    &nbsp; &amp; &nbsp;
+    <a
+      href="https://github.com/TongHuaQWQ/Suzu"
+      target="_blank"
+      rel="noopener"
+      class="text-(--md-primary)">{siteName}</a
+    >
+    &nbsp;Version &nbsp;
+    <a
+      href="https://github.com/TongHuaQWQ/Suzu"
+      target="_blank"
+      rel="noopener"
+      class="text-(--md-primary)">{siteVersion}</a
+    >
+  </p>
+</footer>

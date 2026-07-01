@@ -2,16 +2,28 @@
 import type { ImageMetadata } from "astro";
 import SidebarLayout from "../layouts/SidebarLayout.astro";
 import PostList from "../components/blog/PostList.astro";
+import Pagination from "../components/blog/Pagination.astro";
 import { getSortedPosts } from "../utils/posts";
+import { site } from "../site.config";
 
 const imageModules: Record<string, { default: ImageMetadata }> = import.meta.glob(
   "../assets/**/*.{jpg,jpeg,png,webp,svg}",
   { eager: true },
 );
 
-const sorted = await getSortedPosts();
+const PAGE_SIZE = site.ui.pageSize;
+const allPosts = await getSortedPosts();
+const totalPages = Math.ceil(allPosts.length / PAGE_SIZE);
+const posts = allPosts.slice(0, PAGE_SIZE);
 ---
 
 <SidebarLayout>
-  <PostList posts={sorted} slugPrefix="" imageModules={imageModules} />
+  <div class="flex flex-col gap-6">
+    <PostList posts={posts} slugPrefix="" imageModules={imageModules} />
+    <Pagination
+      currentPage={1}
+      lastPage={totalPages}
+      getPageUrl={(n: number) => (n === 1 ? "/" : `/page/${n}/`)}
+    />
+  </div>
 </SidebarLayout>

@@ -1,6 +1,7 @@
 ---
 title: "Suzu 博客"
 date: "2026-06-08"
+pubDate: 2026-06-08
 description: "用 Astro + Tailwind CSS 搭建的个人博客"
 category: "web"
 techStack: ["Astro", "Tailwind CSS", "MD3"]

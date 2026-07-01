@@ -1,6 +1,7 @@
 ---
 title: "Suzu 的 Markdown 增强功能"
 date: "2026-06-27"
+pubDate: "2026-06-27"
 description: "本博客独有的 Markdown 增强语法：WikiLink、GitHub 卡片、标题锚点、增强代码块等"
 tags: ["Markdown", "教程", "Suzu"]
 categories: ["指南"]

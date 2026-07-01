@@ -8,8 +8,7 @@ export const site = {
   // ── 个人信息 ──
   profile: {
     name: "童话",
-    avatar:
-      "http://q.qlogo.cn/headimg_dl?dst_uin=2489196089&spec=640&img_type=jpg",
+    avatar: "http://q.qlogo.cn/headimg_dl?dst_uin=2489196089&spec=640",
     signature: "Hello Suzu",
   },
 
@@ -86,6 +85,7 @@ export const site = {
     navbarHeight: 80, // 导航栏高度（px），用于滚动偏移
     sidebarWidth: "18rem", // 侧边栏宽度
     animationDuration: 400, // 页面动画时长（ms）
+    pageSize: 6, // 首页/分类页/标签页每页文章数
   },
 
   // ── 版权声明 ──

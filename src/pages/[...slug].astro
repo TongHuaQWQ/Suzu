@@ -15,11 +15,8 @@ const { Content } = await render(page);
 ---
 
 <SidebarLayout title={page.data.title}>
-  <div
-    class="bg-(--md-surface-container-lowest) rounded-2xl shadow-sm p-8 animate-fade-up"
-  >
-    <div class="page-content article-content prose prose-md max-w-none leading-relaxed"
-    >
+  <div class="bg-(--md-surface-container-lowest) rounded-2xl shadow-sm p-8 animate-fade-up">
+    <div class="page-content article-content prose prose-md max-w-none leading-relaxed">
       <Content />
     </div>
   </div>

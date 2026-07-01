@@ -24,6 +24,7 @@
 */
 
 :root {
+  --primary:#f472b6;
   /* ── Primary（主色）── */
   --md-primary: #8b2671;
   --md-on-primary: #ffffff;
@@ -61,6 +62,9 @@
   --md-surface-container: #f1ecf0;
   --md-surface-container-high: #f3e5e8;
   --md-surface-container-highest: #ede0e2;
+
+  /* ── 分页器 ── */
+  --card-bg: var(--md-surface-container-lowest);
 }
 
 /* ── 页面进入动画 ── */
@@ -93,6 +97,26 @@
 
 .animate-fade-in-left {
   animation: fade-in-left 0.4s ease-out both;
+}
+
+/* ── 分页器按钮卡片 ── */
+.btn-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--md-on-surface-variant);
+  transition: all 0.2s;
+  cursor: pointer;
+  user-select: none;
+}
+.btn-card:hover {
+  background: var(--md-surface-container-high);
+  color: var(--md-on-surface);
+}
+.btn-card.disabled {
+  opacity: 0.3;
+  pointer-events: none;
 }
 
 
@@ -272,5 +296,21 @@
 }
 
 .prose-md :where(a):not(:where([class~="not-prose"], [class~="not-prose"] *)):hover {
+  color: var(--md-on-primary-container);
+}
+
+footer a {
+  color: var(--md-primary);
+  text-decoration: none;
+  padding: 0.07rem 0.2rem;
+  margin: -0.07rem -0.2rem;
+  border-radius: 0.375rem;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+footer a:hover {
+  background-color: var(--md-primary-container);
   color: var(--md-on-primary-container);
 }

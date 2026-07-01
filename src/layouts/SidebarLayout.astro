@@ -4,6 +4,7 @@ import type { GraphNode, GraphEdge } from "../utils/graph";
 import BaseLayout from "./BaseLayout.astro";
 import Sidebar from "../components/Sidebar.astro";
 import { site } from "../site.config";
+import Footer from "../components/blog/Footer.astro";
 
 interface Props {
   title?: string;
@@ -13,19 +14,36 @@ interface Props {
   currentSlug?: string;
 }
 
-const { title = site.title, headings, graphNodes, graphEdges, currentSlug } = Astro.props;
+const {
+  title = site.title,
+  headings,
+  graphNodes,
+  graphEdges,
+  currentSlug,
+} = Astro.props;
 ---
 
 <BaseLayout title={title}>
   <div class="py-8 grid grid-cols-1 lg:grid-cols-4 gap-6">
     <!-- 左侧：侧边栏（占 1 列）—— 手机上排第二 -->
     <div class="lg:col-span-1 order-2 lg:order-0 lg:sticky">
-      <Sidebar headings={headings} graphNodes={graphNodes} graphEdges={graphEdges} currentSlug={currentSlug} />
+      <Sidebar
+        headings={headings}
+        graphNodes={graphNodes}
+        graphEdges={graphEdges}
+        currentSlug={currentSlug}
+      />
+      <footer class="block lg:hidden">
+        <Footer />
+      </footer>
     </div>
 
     <!-- 右侧：主要内容（占 3 列）—— 手机上排第一，带淡入动画 -->
     <div class="lg:col-span-3 order-1 lg:order-0">
       <slot />
+      <footer class="hidden lg:block">
+        <Footer />
+      </footer>
     </div>
   </div>
 </BaseLayout>
