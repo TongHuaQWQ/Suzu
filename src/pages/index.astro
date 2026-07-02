@@ -6,10 +6,8 @@ import Pagination from "../components/blog/Pagination.astro";
 import { getSortedPosts } from "../utils/posts";
 import { site } from "../site.config";
 
-const imageModules: Record<string, { default: ImageMetadata }> = import.meta.glob(
-  "../assets/**/*.{jpg,jpeg,png,webp,svg}",
-  { eager: true },
-);
+const imageModules: Record<string, { default: ImageMetadata }> =
+  import.meta.glob("../assets/**/*.{jpg,jpeg,png,webp,svg}", { eager: true });
 
 const PAGE_SIZE = site.ui.pageSize;
 const allPosts = await getSortedPosts();

@@ -26,6 +26,7 @@
     "expressive-code-language-badge": "^1.1.0",
     "force-graph": "^1.51.4",
     "markdown-it": "^14.2.0",
+    "oddmisc": "^1.2.8",
     "remark-wiki-link": "^2.0.1",
     "sanitize-html": "^2.17.5",
     "sharp": "^0.35.1",

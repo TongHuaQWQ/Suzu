@@ -50,6 +50,9 @@ importers:
       markdown-it:
         specifier: ^14.2.0
         version: 14.2.0
+      oddmisc:
+        specifier: ^1.2.8
+        version: 1.2.8
       remark-wiki-link:
         specifier: ^2.0.1
         version: 2.0.1
@@ -2404,6 +2407,9 @@ packages:
   obug@2.1.2:
     resolution: {integrity: sha512-AWGB9WFcRXOQs48Z/udjI5ZcZMHXwX8XPByNpOydgcGsDLIzjGizhoMWJyKAWze7AVW/2W1i+/gPX4YtKe5cyg==}
     engines: {node: '>=12.20.0'}
+
+  oddmisc@1.2.8:
+    resolution: {integrity: sha512-6lOr3pOSlpvakgUn5BGS5pt4mRwzISPojHd+C7UTF3+7hl/xYV0zBqGs+wtz98uAlmy3qe+pYsEV3qeS4zLRXQ==}
 
   ofetch@1.5.1:
     resolution: {integrity: sha512-2W4oUZlVaqAPAil6FUg/difl6YhqhUR7x2eZY4bQCko22UXg3hptq9KLQdqFClV+Wu85UX7hNtdGTngi/1BxcA==}
@@ -5857,6 +5863,8 @@ snapshots:
       boolbase: 1.0.0
 
   obug@2.1.2: {}
+
+  oddmisc@1.2.8: {}
 
   ofetch@1.5.1:
     dependencies:

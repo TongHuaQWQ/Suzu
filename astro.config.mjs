@@ -14,7 +14,7 @@ import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers'
 import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections'
 import { pluginLanguageBadge } from 'expressive-code-language-badge';
 import { site } from './src/site.config.ts';
-
+import { oddmisc } from 'oddmisc/astro';
 import sitemap from '@astrojs/sitemap';
 
 // 构建时预取 GitHub 仓库数据
@@ -56,6 +56,11 @@ export default defineConfig({
     },
   }), icon(), mdx(), sitemap({
     filter: (page) => !/\/posts\/.+\/.+/.test(new URL(page).pathname),
+  }),
+  oddmisc({
+    umami: {
+      shareUrl: 'https://u.24862648.xyz/share/v5w9uTESRticZn1T'
+    }
   })],
   vite: {
     plugins: [tailwindcss()]
