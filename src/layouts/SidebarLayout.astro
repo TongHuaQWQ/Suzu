@@ -39,7 +39,8 @@ const {
     </div>
 
     <!-- 右侧：主要内容（占 3 列）—— 手机上排第一，带淡入动画 -->
-    <div class="lg:col-span-3 order-1 lg:order-0">
+    <!-- 右侧：主要内容（占 3 列，swup slide-up 过渡） -->
+    <div class="lg:col-span-3 order-1 lg:order-0 transition-slide-up">
       <slot />
       <footer class="hidden lg:block">
         <Footer />

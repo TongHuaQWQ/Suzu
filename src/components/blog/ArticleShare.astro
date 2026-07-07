@@ -1,0 +1,373 @@
+---
+import { Icon } from "astro-icon/components";
+import { site } from "../../site.config";
+
+interface Props {
+  title?: string;
+  desc?: string;
+  url?: string;
+  coverImage?: string;
+  author?: string;
+  date?: string;
+  readTime?: string;
+  wordCount?: string;
+  blogName?: string;
+  avatar?: string;
+}
+
+const postUrl = decodeURIComponent(Astro.url.toString());
+const avatar = Astro.props.avatar || "";
+const coverImage = Astro.props.coverImage || "";
+
+async function imgToDataUrl(url: string): Promise<string> {
+  if (!url || !url.startsWith("http")) return url;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return url;
+    const buf = await res.arrayBuffer();
+    const base64 = Buffer.from(buf).toString("base64");
+    return `data:image/png;base64,${base64}`;
+  } catch {
+    return url;
+  }
+}
+
+const posterAvatar = avatar ? await imgToDataUrl(avatar) : "";
+const posterCover = coverImage ? await imgToDataUrl(coverImage) : "";
+
+const data = {
+  title: Astro.props.title,
+  desc: Astro.props.desc,
+  author: Astro.props.author,
+  date: Astro.props.date || new Date().toLocaleDateString("zh-CN"),
+  readTime: Astro.props.readTime,
+  wordCount: Astro.props.wordCount,
+  blogName: Astro.props.blogName || "Suzu",
+};
+---
+
+<div>
+  <div
+    class="relative overflow-hidden bg-(--md-surface-container-low) rounded-xl py-5 px-6 flex flex-col sm:flex-row items-center justify-between gap-4"
+  >
+    <div class="flex items-center gap-3 flex-1">
+      <div
+        class="h-12 w-12 rounded-lg bg-(--primary) flex items-center justify-center text-white dark:text-black/70 shrink-0"
+      >
+        <Icon name="mingcute:love-fill" class="h-6 w-6" />
+      </div>
+      <div>
+        <h3
+          class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-1"
+        >
+          分享
+        </h3>
+        <p class="text-sm text-neutral-600 dark:text-neutral-400">
+          如果这篇文章对你有帮助，欢迎分享给更多人！
+        </p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <button
+        id="openShareModalBtn"
+        class="inline-flex items-center gap-2 px-6 py-3 bg-(--primary) text-white dark:text-black/70 rounded-lg font-medium hover:bg-(--primary)/80 hover:scale-105 active:scale-95 transition-all whitespace-nowrap"
+      >
+        <Icon name="mingcute:share-2-fill" class="w-4 h-4" /> 分享
+      </button>
+    </div>
+  </div>
+  {
+    site.sponsor.enable && (
+      <div class="mx-6 rounded-b-xl border-t-0 px-3 pb-1.5 pt-1 sm:mx-8 sm:px-4 bg-(--md-surface-container)">
+        <a
+          class="flex items-center justify-between text-muted-foreground no-underline"
+          href={site.sponsor.url}
+        >
+          <span>{site.sponsor.label}</span>
+          <Icon name="mingcute:receive-money-line" />
+        </a>
+      </div>
+    )
+  }
+</div>
+
+<!-- ========== 卡片模板（截图用） ========== -->
+<template id="posterTemplate" data-title={data.title} data-url={postUrl}>
+  <div
+    class="w-[360px] bg-white"
+    style="box-shadow: 0 0 0 1px rgba(0,0,0,0.04);"
+  >
+    <!-- 封面区 -->
+    <div class="p-5 pb-0">
+      <div class="h-44 w-full relative overflow-hidden rounded-[20px]">
+        {
+          posterCover ? (
+            <img
+              src={posterCover}
+              alt="封面"
+              class="w-full h-full object-cover"
+            />
+          ) : (
+            <div class="w-full h-full relative overflow-hidden bg-(--md-primary-container)">
+              <div class="absolute w-40 h-40 rounded-full bg-(--primary)/12 -top-10 -right-14" />
+              <div class="absolute w-30 h-30 rounded-full bg-(--primary)/10 bottom-7  top-20 right-68" />
+            </div>
+          )
+        }
+        <!-- 整体渐变遮罩：底部分区加深 -->
+        <div
+          class="absolute inset-0"
+          style="background: linear-gradient(180deg, rgba(0,0,0,0.0) 50%, rgba(0,0,0,0.45) 100%);"
+        >
+        </div>
+        <!-- 底栏毛玻璃模拟：半透明深色底 + 顶部高光线 -->
+        <div
+          class="absolute bottom-0 left-0 right-0 px-4 py-3 flex items-center justify-between rounded-b-[20px]"
+          style="background: linear-gradient(0deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.35) 100%);"
+        >
+          <div
+            class="flex items-center gap-2.5 text-white/90 text-xs font-medium tracking-wide"
+          >
+            <span>{data.date}</span>
+            {
+              data.readTime && (
+                <>
+                  <span
+                    class="w-1 h-1 rounded-full"
+                    style="background: rgba(255,255,255,0.4);"
+                  />
+                  <span class="opacity-70">{data.readTime}</span>
+                </>
+              )
+            }
+          </div>
+          {
+            data.wordCount && (
+              <span
+                class="text-white/60 text-[10px] font-medium px-2.5 py-0.5 rounded-full"
+                style="background: rgba(255,255,255,0.12);"
+              >
+                {data.wordCount}
+              </span>
+            )
+          }
+        </div>
+      </div>
+    </div>
+    <!-- 内容区 -->
+    <div class="p-6 pb-7">
+      <h2
+        class="text-[19px] font-bold text-neutral-900 leading-[1.45] tracking-tight mb-2.5"
+      >
+        {data.title}
+      </h2>
+      <p
+        class="text-[13.5px] text-neutral-500 leading-[1.75] line-clamp-3 mb-6"
+      >
+        {data.desc}
+      </p>
+      <div
+        class="flex items-center justify-between pt-4.5 border-t border-neutral-100/80"
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="w-16 h-16 rounded-full shrink-0 border-2 border-white shadow-sm overflow-hidden bg-linear-to-br from-(--primary) to-purple-400 flex items-center justify-center text-white text-sm font-bold"
+          >
+            {
+              posterAvatar ? (
+                <img
+                  src={posterAvatar}
+                  alt="头像"
+                  class="w-full h-full object-cover"
+                />
+              ) : (
+                data.author.charAt(0)
+              )
+            }
+          </div>
+          <div class="flex flex-col leading-none">
+            <span class="text-lg font-semibold text-neutral-700"
+              >{data.author}</span
+            >
+            <span class="text-sm text-neutral-400 mt-1">{data.blogName}</span>
+          </div>
+        </div>
+        <div
+          id="qrGenArea"
+          class="w-16 h-16 bg-neutral-100 rounded-[10px] flex items-center justify-center text-[10px] text-neutral-400"
+        >
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- ========== 弹窗 ========== -->
+<div
+  id="shareModal"
+  class="fixed inset-0 z-[99999] hidden items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+>
+  <div
+    class="w-full max-w-[420px] bg-white rounded-xl p-6 shadow-2xl flex flex-col items-center relative"
+  >
+    <div
+      id="loadingSpinner"
+      class="flex items-center justify-center flex-col py-8"
+    >
+      <svg
+        class="animate-spin h-8 w-8 text-(--primary) mb-3"
+        viewBox="0 0 24 24"
+        fill="none"
+      >
+        <circle
+          class="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"></circle>
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
+      </svg>
+      <span class="text-sm text-neutral-500">生成卡片中...</span>
+    </div>
+    <img
+      id="previewImg"
+      src=""
+      alt="预览"
+      class="w-full rounded-xl shadow-md hidden"
+    />
+    <div id="actionBtns" class="w-full flex gap-3 mt-4 hidden">
+      <button
+        id="copyLinkBtn"
+        class="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-neutral-100 text-neutral-700 font-medium hover:bg-neutral-200 transition-colors cursor-pointer"
+      >
+        <Icon name="mingcute:link-line" class="w-4 h-4" /> 复制链接
+      </button>
+      <button
+        id="downloadBtn"
+        class="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-(--primary) text-white font-medium hover:opacity-80 transition-colors cursor-pointer"
+      >
+        <Icon name="mingcute:download-2-line" class="w-4 h-4" /> 下载图片
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // @ts-expect-error qrcode 类型声明加载异常，暂时忽略
+  import QRCode from "qrcode";
+  import domtoimage from "dom-to-image-more";
+
+  function initShareModal() {
+    const modal = document.getElementById("shareModal");
+    const openBtn = document.getElementById("openShareModalBtn");
+    const template = document.querySelector(
+      "#posterTemplate",
+    ) as HTMLTemplateElement;
+    const loadingSpinner = document.getElementById("loadingSpinner");
+    const previewImg = document.getElementById("previewImg");
+    const actionBtns = document.getElementById("actionBtns");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const copyLinkBtn = document.getElementById("copyLinkBtn");
+
+    if (!modal || !openBtn || !template) return;
+
+    // 从模板获取服务端数据
+    const postUrl = template.dataset.url || "";
+    const postTitle = template.dataset.title || "分享";
+
+    const newOpenBtn = openBtn.cloneNode(true);
+    openBtn.parentNode.replaceChild(newOpenBtn, openBtn);
+
+    newOpenBtn.addEventListener("click", async function () {
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      modal.style.zIndex = "99999";
+      if (modal.parentNode !== document.body) {
+        document.body.appendChild(modal);
+      }
+
+      const posterEl = (template.content.cloneNode(true) as DocumentFragment)
+        .firstElementChild as HTMLElement;
+      posterEl.classList.add("absolute", "-left-[9999px]", "top-0");
+      document.body.appendChild(posterEl);
+
+      const qrGenArea = posterEl.querySelector("#qrGenArea")!;
+
+      loadingSpinner.classList.remove("hidden");
+      previewImg.classList.add("hidden");
+      actionBtns.classList.add("hidden");
+
+      // 生成二维码
+      qrGenArea.innerHTML = "";
+      const canvas = document.createElement("canvas");
+      await QRCode.toCanvas(canvas, postUrl, {
+        width: 48,
+        margin: 0,
+        color: { dark: "#1A1A1A", light: "#ffffff" },
+      });
+      qrGenArea.appendChild(canvas);
+
+      await new Promise((r) => requestAnimationFrame(r));
+
+      try {
+        const blob = await domtoimage.toBlob(posterEl, {
+          width: 720,
+          height: posterEl.scrollHeight * 2,
+          style: { transform: "scale(2)", transformOrigin: "top left" },
+          bgColor: "#ffffff",
+        });
+        const url = URL.createObjectURL(blob);
+        posterEl.remove();
+
+        previewImg.src = url;
+        downloadBtn.onclick = () => {
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${postTitle}.png`;
+          a.click();
+        };
+
+        loadingSpinner.classList.add("hidden");
+        previewImg.classList.remove("hidden");
+        actionBtns.classList.remove("hidden");
+      } catch (err) {
+        console.error("截图失败:", err);
+        loadingSpinner.innerHTML = `<div class="text-red-500 text-sm text-center">生成失败，可尝试<br>刷新后重试</div>`;
+      }
+    });
+
+    // 点击遮罩关闭
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+    });
+
+    // 复制链接
+    copyLinkBtn.addEventListener("click", async function () {
+      try {
+        await navigator.clipboard.writeText(postUrl);
+        copyLinkBtn.innerHTML = `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 已复制`;
+        setTimeout(() => {
+          copyLinkBtn.innerHTML = `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> 复制链接`;
+        }, 2000);
+      } catch {
+        alert("复制失败，请手动复制地址:\n" + postUrl);
+      }
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initShareModal);
+  } else {
+    initShareModal();
+  }
+  document.addEventListener("swup:contentReplaced", initShareModal);
+  document.addEventListener("astro:page-load", initShareModal);
+</script>

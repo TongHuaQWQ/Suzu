@@ -6,14 +6,17 @@ title: 关于我
 
 ::github{repo="TongHuaQWQ/Suzu"}
 
-> [!CAUTION]
-> 项目功能并未完全，思考后在确定使用
+> [!NOTE] NOTE
+> 思考后在觉得是否使用本项目，项目目前并没有太多优点
 
-> [!WARNING]
+> [!CAUTION] CAUTION
+> 项目功能并未完全，思考后在确定使用
+> > [!WARNING-] WARNING
 > 本项目仍在积极开发中，部分功能可能发生变化。
 
-> [!TIP]
+> [!TIP-] TIP
 > 本项目参考了 [Fuwari](https://github.com/saicaca/fuwari) 的页面设计和 [Mizuki](https://github.com/LyraVoid/Mizuki) 的功能，可以使用这个项目
+
 
 
 ## ✨ 功能特性

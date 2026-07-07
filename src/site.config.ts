@@ -12,6 +12,13 @@ export const site = {
     signature: "Hello Suzu",
   },
 
+  // —— 赞助链接 ——
+  sponsor: {
+    enable: true,
+    label: "请我喝杯咖啡 ☕",
+    url: "/about", // 你的赞助链接
+  },
+
   // ── 导航栏 ──
   nav: [
     { label: "首页", href: "/" },
@@ -53,6 +60,14 @@ export const site = {
     search: true, // 搜索功能
     graph: true, // 图谱
     backlinks: true, // 文章链接
+    Share: true, // 分享与赞助
+  },
+
+  // ── Callout 样式主题 ──
+  // 选项: "github" | "obsidian" | "vitepress" | "docusaurus"
+  // 分别对应 GitHub Alerts、Obsidian Callouts、VitePress 自定义容器、Docusaurus Admonitions 的配色
+  callout: {
+    theme: "github",
   },
 
   // ── 阅读设置 ──

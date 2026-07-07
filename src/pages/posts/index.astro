@@ -17,7 +17,7 @@ const posts = (await getCollection("posts")).sort((a, b) => {
       posts.map((post) => (
         <a
           href={`/posts/${post.id}`}
-          class="block bg-(--md-surface-container-lowest) rounded-2xl shadow-sm p-6 hover:shadow-md transition-shadow"
+          class="block card p-6 hover:shadow-md transition-shadow"
         >
           <h2 class="text-lg font-semibold text-(--md-on-surface)">
             {post.data.title}

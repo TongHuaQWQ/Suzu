@@ -5,6 +5,7 @@ import { Icon } from "astro-icon/components";
 import type { ImageMetadata, MarkdownHeading } from "astro";
 import SidebarLayout from "../../layouts/SidebarLayout.astro";
 import License from "../../components/blog/License.astro";
+import ArticleShare from "../../components/blog/ArticleShare.astro";
 import Backlinks from "../../components/blog/Backlinks.astro";
 import PostMeta from "../../components/blog/PostMeta.astro";
 import PostNav from "../../components/blog/PostNav.astro";
@@ -148,9 +149,7 @@ const coverImage = post.data.image
   graphEdges={graphData?.edges}
   currentSlug={`/posts/${post.id}`}
 >
-  <article
-    class="bg-(--md-surface-container-lowest) rounded-2xl shadow-sm overflow-hidden animate-fade-up"
-  >
+  <article class="card overflow-hidden animate-fade-up">
     <!-- 封面图 -->
     {
       coverImage && (
@@ -266,17 +265,37 @@ const coverImage = post.data.image
         )
       }
 
-      <!-- 引用链接 -->
+      <!-- 分享 -->
       {
-        site.features.backlinks && (currentBacklinks.length > 0 || currentOutgoing.length > 0) && (
+        site.features.Share && (
           <div class="mt-6">
-            <Backlinks
-              backlinks={currentBacklinks}
-              outgoing={currentOutgoing}
-              titles={linkTitles}
+            <ArticleShare
+              title={post.data.title}
+              desc={post.data.description}
+              coverImage={coverImage?.src || ""}
+              author={site.profile.name}
+              date={new Date(post.data.date).toLocaleDateString("zh-CN")}
+              readTime={`${stats.readingTime} 分钟`}
+              wordCount={`${stats.wordCount} 字`}
+              blogName={site.title || "Suzu"}
+              avatar={site.profile.avatar}
             />
           </div>
         )
+      }
+
+      <!-- 引用链接 -->
+      {
+        site.features.backlinks &&
+          (currentBacklinks.length > 0 || currentOutgoing.length > 0) && (
+            <div class="mt-6">
+              <Backlinks
+                backlinks={currentBacklinks}
+                outgoing={currentOutgoing}
+                titles={linkTitles}
+              />
+            </div>
+          )
       }
     </div>
   </article>

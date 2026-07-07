@@ -9,18 +9,22 @@ import expressiveCode from 'astro-expressive-code';
 import { remarkHeadingAnchor } from './src/plugins/remark-heading-anchor';
 import { remarkWikilink } from './src/plugins/remark-wikilink';
 import { remarkGithubCard } from './src/plugins/remark-github-card';
+import { remarkCallout, remarkCalloutDirective } from './src/plugins/remark-callout';
 import { generateGitHubCache } from './src/utils/github';
+import { generateCalloutCSS } from './src/utils/callout-css';
 import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers'
 import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections'
 import { pluginLanguageBadge } from 'expressive-code-language-badge';
 import { site } from './src/site.config.ts';
 import { oddmisc } from 'oddmisc/astro';
 import sitemap from '@astrojs/sitemap';
-
-// 构建时预取 GitHub 仓库数据
+import swup from '@swup/astro';
 
 // 构建前预取 GitHub 仓库数据
 await generateGitHubCache();
+
+// 构建时将配置的 Callout 主题 CSS 写入 callout.css
+await generateCalloutCSS(site.callout.theme);
 
 // https://astro.build/config
 export default defineConfig({
@@ -54,6 +58,9 @@ export default defineConfig({
         borderRadius: '0.375rem',
       },
     },
+  }), swup({
+    theme: false,
+    animationClass: 'transition-slide-up',
   }), icon(), mdx(), sitemap({
     filter: (page) => !/\/posts\/.+\/.+/.test(new URL(page).pathname),
   }),
@@ -63,12 +70,12 @@ export default defineConfig({
     }
   })],
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindcss()],
   },
   markdown: {
     processor: satteri({
       features: { directive: true },
-      mdastPlugins: [remarkGithubCard()],
+      mdastPlugins: [remarkGithubCard(), remarkCalloutDirective(), remarkCallout()],
       hastPlugins: [remarkHeadingAnchor(), remarkWikilink()],
     }),
   },

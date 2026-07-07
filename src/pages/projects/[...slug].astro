@@ -44,7 +44,7 @@ const categoryLabel = categories.find(c => c.value === project.data.category)?.l
 ---
 
 <SidebarLayout title={project.data.title} headings={headings}>
-  <article class="bg-(--md-surface-container-lowest) rounded-2xl shadow-sm overflow-hidden animate-fade-up">
+  <article class="card overflow-hidden animate-fade-up">
     {/* 封面图 */}
     {coverImage && (
       <div class="relative w-full h-48 md:h-64 overflow-hidden">
