@@ -42,7 +42,7 @@ title: 关于我
 
 ### ✍️ Markdown 增强
 
-- [x] [Sätteri](https://satteri.dev/) 处理器，Rust 驱动，性能优秀
+- [x] [Sätteri](https://satteri.bruits.org) 处理器，Rust 驱动，性能优秀
 - [x] `[[wikilink]]` 语法关联文章
 - [x] 标题锚点链接
 - [x] `::github{repo="user/repo"}` 嵌入 GitHub 仓库卡片
