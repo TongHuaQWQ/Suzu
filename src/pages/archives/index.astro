@@ -6,7 +6,6 @@ const allPosts = (await getCollection("posts")).sort(
   (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime(),
 );
 
-// 按年份分组
 const yearMap = new Map<number, typeof allPosts>();
 allPosts.forEach((post) => {
   const year = new Date(post.data.date).getFullYear();
@@ -14,86 +13,383 @@ allPosts.forEach((post) => {
   yearMap.get(year)!.push(post);
 });
 const years = [...yearMap.entries()].sort((a, b) => b[0] - a[0]);
+
+function groupByMonth(posts: typeof allPosts) {
+  const monthMap = new Map<string, typeof allPosts>();
+  posts.forEach((post) => {
+    const key = post.data.date.slice(0, 7);
+    if (!monthMap.has(key)) monthMap.set(key, []);
+    monthMap.get(key)!.push(post);
+  });
+  return [...monthMap.entries()].sort((a, b) => b[0].localeCompare(a[0]));
+}
 ---
 
 <SidebarLayout title="归档">
-  <div class="card p-8 overflow-hidden animate-fade-up">
-    <div>
-      {years.map(([year, posts]) => (
-        <div>
-          <!-- 年份行 -->
-          <div class="flex items-center h-[3.75rem]">
-            <div class="w-[15%] md:w-[10%] text-right text-2xl font-bold text-(--md-on-surface) shrink-0 transition-colors">
-              {year}
-            </div>
-            <div class="w-[15%] md:w-[10%] flex justify-center shrink-0">
-              <div class="h-3 w-3 rounded-full bg-transparent outline outline-3 outline-(--md-primary) -outline-offset-[2px] z-50 mx-auto" />
-            </div>
-            <div class="text-sm text-(--md-on-surface-variant) shrink-0">
-              {posts.length} 篇
-            </div>
-          </div>
-
-          <!-- 文章列表 -->
-          {posts.map((post, i) => (
-            <a
-              href={`/posts/${post.id}`}
-              aria-label={post.data.title}
-              class="archive-item group block h-10 w-full rounded-lg hover:bg-(--md-surface-container) transition-all"
-            >
-              <div class="flex items-center h-full">
-                <!-- 日期 -->
-                <div class="w-[15%] md:w-[10%] text-right text-sm text-(--md-on-surface-variant) shrink-0 font-mono transition-colors">
-                  {post.data.date.slice(5)}
+  <div class="archive-wrap animate-fade-up">
+    <div class="card p-6 sm:p-8 overflow-hidden">
+      <h1
+        class="relative text-2xl font-bold text-(--md-on-surface) mb-6
+        before:content-[''] before:absolute before:-left-4 before:top-1/2 before:-translate-y-1/2
+        before:w-1 before:h-6 before:rounded-md before:bg-(--md-primary)"
+      >
+        归档
+      </h1>
+      {
+        years.map(([year, yearPosts]) => {
+          const months = groupByMonth(yearPosts);
+          return (
+            <div class="year-block">
+              {/* ── Year ── */}
+              <div class="flex items-stretch min-h-11">
+                <div class="gcol">
+                  <div class="vline-start" />
+                  <div class="dot dot-year" />
                 </div>
-
-                <!-- 圆点 + 虚线 -->
-                <div class="dash-line w-[15%] md:w-[10%] relative h-full flex items-center">
-                  <div class="archive-dot mx-auto w-1 h-1 rounded-full transition-all duration-300
-                    bg-(--md-outline) group-hover:h-5 group-hover:bg-(--md-primary)
-                    outline outline-4 z-50 outline-(--md-surface-container-lowest)
-                    group-hover:outline-(--md-surface-container)" />
+                <div class="flex items-center flex-1 min-w-0 pl-3 pr-2 rounded-lg gap-2">
+                  <span class="font-mono font-bold text-lg text-(--md-primary)">
+                    {year}
+                  </span>
+                  <span class="text-xs text-(--md-on-surface-variant)">
+                    共 {yearPosts.length} 篇文章
+                  </span>
                 </div>
-
-                <!-- 标题 -->
-                <div class="text-sm text-(--md-on-surface) font-medium group-hover:text-(--md-primary)
-                  group-hover:translate-x-1 transition-all truncate shrink-0
-                  w-[70%] md:max-w-[65%] md:w-[65%]">
-                  {post.data.title}
-                </div>
-
-                <!-- 标签 -->
-                {post.data.tags && post.data.tags.length > 0 && (
-                  <div class="hidden md:block md:w-[15%] text-xs text-(--md-on-surface-variant) truncate opacity-60">
-                    {post.data.tags.map((t) => `#${t}`).join(" ")}
-                  </div>
-                )}
               </div>
-            </a>
-          ))}
-        </div>
-      ))}
+
+              {/* ── Months → Posts ── */}
+              {months.map(([mk, mPosts], mi) => {
+                const lastMonth = mi === months.length - 1;
+                return (
+                  <div class="month-group">
+                    {/* Month */}
+                    <div class="flex items-stretch min-h-9">
+                      <div class="gcol">
+                        <div class="vline" />
+                        <div class="hline-right" />
+                      </div>
+                      <div class="gcol">
+                        <div class="hline-left" />
+                        <div class="dot dot-month" />
+                      </div>
+                      <div class="flex items-center flex-1 min-w-0 pl-3 pr-2 rounded-lg gap-2">
+                        <span class="font-mono font-semibold text-sm text-(--md-on-surface)">
+                          {parseInt(mk.slice(5))}月
+                        </span>
+                        <span class="font-mono text-xs text-(--md-outline)">
+                          {mPosts.length} 篇
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Posts */}
+                    {mPosts.map((post, pi) => {
+                      const lastPost = pi === mPosts.length - 1;
+                      return (
+                        <a
+                          class="flex items-stretch min-h-10 post-row group"
+                          href={`/posts/${post.id}`}
+                        >
+                          <div class="gcol">
+                            <div
+                              class:list={[
+                                lastMonth && lastPost ? "vline-stop" : "vline",
+                              ]}
+                            />
+                          </div>
+                          <div class="gcol">
+                            <div
+                              class:list={[lastPost ? "vline-stop" : "vline"]}
+                            />
+                            <div class="hline-right" />
+                          </div>
+                          <div class="gcol">
+                            <div class="hline-left" />
+                            <div class="dot dot-leaf" />
+                          </div>
+                          <div class="flex items-center flex-1 min-w-0 pl-3 pr-1.5 rounded-lg gap-2 post-body">
+                            <span class="font-mono text-xs text-(--md-outline) shrink-0 w-10 post-date">
+                              {post.data.date.slice(5)}
+                            </span>
+                            {post.data.categories?.map((c) => (
+                              <span class="text-xs font-medium px-1.5 py-0.5 rounded whitespace-nowrap shrink-0 bg-(--md-primary-container) text-(--md-on-primary-container)">
+                                {c}
+                              </span>
+                            ))}
+                            <span class="text-sm font-semibold text-(--md-on-surface-variant) truncate flex-1 min-w-0 post-title">
+                              {post.data.title}
+                            </span>
+                            {post.data.tags?.length > 0 && (
+                              <span class="hidden md:block text-xs text-(--md-outline) shrink-0 max-w-[30%] truncate text-right ml-auto post-tags">
+                                {post.data.tags?.join(" / ")}
+                              </span>
+                            )}
+                          </div>
+                        </a>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })
+      }
     </div>
   </div>
 </SidebarLayout>
 
 <style>
-  /* 垂直虚线：Fuwari 风格 */
-  .dash-line::before {
-    content: '';
+  /* ── CSS variables ── */
+  .archive-wrap {
+    --tree-line: rgba(139, 38, 113, 0.18);
+    --tree-glow: rgba(139, 38, 113, 0.55);
+    --col-w: 1.25rem;
+    --lw: 2px;
+  }
+  @media (max-width: 640px) {
+    .archive-wrap {
+      --col-w: 0.875rem;
+    }
+  }
+
+  /* ── Tree column ── */
+  .gcol {
+    width: var(--col-w);
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  /* ── Vertical dashed lines ── */
+  .vline,
+  .vline-start,
+  .vline-stop {
     position: absolute;
     left: 50%;
+    width: var(--lw);
+    transform: translateX(-50%);
+    z-index: 1;
+    background: repeating-linear-gradient(
+      to bottom,
+      var(--tree-line) 0 5px,
+      transparent 5px 9px
+    );
+  }
+  .vline {
     top: 0;
     bottom: 0;
-    border-left: 2px dashed var(--md-outline-variant);
-    transform: translateX(-50%);
-    z-index: 0;
+  }
+  .vline-start {
+    top: 50%;
+    bottom: 0;
+  }
+  .vline-stop {
+    top: 0;
+    height: 50%;
   }
 
-  /* 最后一个条目虚线不延伸到底 */
-  .dash-line:last-of-type::before {
-    bottom: 50%;
+  /* ── Horizontal connectors ── */
+  .hline-right,
+  .hline-left {
+    position: absolute;
+    top: 50%;
+    height: var(--lw);
+    transform: translateY(-50%);
+    z-index: 1;
+  }
+  .hline-right {
+    left: 50%;
+    width: 50%;
+    background: repeating-linear-gradient(
+      to right,
+      var(--tree-line) 0 5px,
+      transparent 5px 9px
+    );
+  }
+  .hline-left {
+    left: 0;
+    width: 50%;
+    background: repeating-linear-gradient(
+      to right,
+      transparent 0 calc(50% - 5px),
+      var(--tree-line) calc(50% - 5px) 50%,
+      transparent 50% 100%
+    );
   }
 
+  /* ── Glow overlays (hidden → hover) ── */
+  .vline::after,
+  .vline-start::after,
+  .vline-stop::after,
+  .hline-right::after,
+  .hline-left::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--tree-glow);
+    border-radius: 1px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 2;
+    pointer-events: none;
+  }
 
+  /* ── Dots ── */
+  .dot {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 9999px;
+    z-index: 10;
+  }
+  .dot-year {
+    width: 0.75rem;
+    height: 0.75rem;
+    background: var(--md-primary);
+    transition: box-shadow 0.3s ease;
+  }
+  .dot-month {
+    width: 0.5rem;
+    height: 0.5rem;
+    background: var(--md-primary);
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+  }
+  .dot-leaf {
+    width: 0.5rem;
+    height: 0.5rem;
+    border: 2px solid var(--md-outline);
+    background: var(--md-surface-container-lowest);
+    transition:
+      transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+      background 0.25s ease,
+      border-color 0.25s ease,
+      box-shadow 0.25s ease;
+  }
+
+  /* ── Post row ── */
+  .post-row {
+    text-decoration: none;
+    color: inherit;
+  }
+  .post-row:focus-visible {
+    outline: 2px solid var(--md-primary);
+    outline-offset: -2px;
+    border-radius: 0.5rem;
+  }
+  .post-body {
+    transition:
+      transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+      background 0.2s ease;
+  }
+
+  /* ── Hover: slide right ── */
+  .post-row:hover .post-body {
+    transform: translateX(6px);
+    background: var(--md-surface-container);
+  }
+  .post-row:hover .post-date {
+    color: var(--md-primary);
+  }
+  .post-row:hover .post-title {
+    color: var(--md-on-surface);
+  }
+  .post-row:hover .post-tags {
+    color: var(--md-primary);
+  }
+  .post-row:hover .dot-leaf {
+    transform: translate(-50%, -50%) translateX(6px);
+    background: var(--md-primary);
+    border-color: var(--md-primary);
+    box-shadow: 0 0 0 3px rgba(139, 38, 113, 0.12);
+  }
+
+  /* ── Entrance animation ── */
+  .year-block {
+    opacity: 0;
+    animation: archiveFadeUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) var(--d, 0ms)
+      forwards;
+  }
+  .year-block + .year-block {
+    margin-top: 1rem;
+  }
+
+  @keyframes archiveFadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* ── Hover path highlight ── */
+  .year-block:has(.post-row:hover) > :first-child .vline-start::after {
+    opacity: 1;
+  }
+  .year-block:has(.post-row:hover) > :first-child .dot-year {
+    box-shadow: 0 0 0 4px rgba(139, 38, 113, 0.15);
+  }
+
+  .month-group:has(~ .month-group:has(.post-row:hover))
+    > :first-child
+    .gcol:first-child
+    .vline::after,
+  .month-group:has(~ .month-group:has(.post-row:hover))
+    > :first-child
+    .gcol:first-child
+    .vline-stop::after {
+    opacity: 1;
+  }
+
+  .month-group:has(.post-row:hover)
+    > :first-child
+    .gcol:first-child
+    .vline::after,
+  .month-group:has(.post-row:hover)
+    > :first-child
+    .gcol:first-child
+    .vline-stop::after,
+  .month-group:has(.post-row:hover)
+    > :first-child
+    .gcol:first-child
+    .hline-right::after {
+    opacity: 1;
+  }
+  .month-group:has(.post-row:hover)
+    > :first-child
+    .gcol:nth-child(2)
+    .hline-left::after {
+    opacity: 1;
+  }
+  .month-group:has(.post-row:hover) > :first-child .dot-month {
+    opacity: 0.85;
+  }
+
+  .post-row:has(~ .post-row:hover) .gcol:nth-child(2) .vline::after,
+  .post-row:has(~ .post-row:hover) .gcol:nth-child(2) .vline-stop::after {
+    opacity: 1;
+  }
+
+  .post-row:hover .gcol:nth-child(2) .vline::after,
+  .post-row:hover .gcol:nth-child(2) .vline-stop::after,
+  .post-row:hover .gcol:nth-child(2) .hline-right::after,
+  .post-row:hover .gcol:nth-child(3) .hline-left::after {
+    opacity: 1;
+  }
 </style>
+
+<script is:inline>
+  function replayArchiveAnimations() {
+    document.querySelectorAll(".year-block").forEach((el) => {
+      el.style.animation = "none";
+      el.offsetHeight;
+      el.style.animation = "";
+    });
+  }
+  document.addEventListener("swup:contentReplaced", () => {
+    requestAnimationFrame(replayArchiveAnimations);
+  });
+</script>
