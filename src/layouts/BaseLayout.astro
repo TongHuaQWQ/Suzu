@@ -56,7 +56,7 @@ const ogImageURL = new URL(image, site.url);
   </head>
   <body class="bg-(--md-surface) min-h-screen">
     <div class="max-w-6xl mx-auto px-4 mt-6 flex flex-col gap-6">
-      <Navigation />
+      <Navigation class="relative z-10" />
       <main>
         <slot />
       </main>
@@ -79,4 +79,15 @@ const ogImageURL = new URL(image, site.url);
     });
   </script>
   <script is:inline src="/scripts/github-card.js"></script>
+  <!-- Fancybox -->
+  <script>
+    import { initFancybox, destroyFancybox } from "../scripts/fancybox";
+
+    initFancybox();
+
+    document.addEventListener("astro:after-swap", () => {
+      destroyFancybox();
+      initFancybox();
+    });
+  </script>
 </html>

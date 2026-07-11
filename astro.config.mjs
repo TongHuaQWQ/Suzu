@@ -10,6 +10,7 @@ import { remarkHeadingAnchor } from './src/plugins/remark-heading-anchor';
 import { remarkWikilink } from './src/plugins/remark-wikilink';
 import { remarkGithubCard } from './src/plugins/remark-github-card';
 import { remarkCallout, remarkCalloutDirective } from './src/plugins/remark-callout';
+import { remarkFigcaption } from './src/plugins/remark-figcaption';
 import { generateGitHubCache } from './src/utils/github';
 import { generateCalloutCSS } from './src/utils/callout-css';
 import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers'
@@ -20,6 +21,7 @@ import { oddmisc } from 'oddmisc/astro';
 import sitemap from '@astrojs/sitemap';
 import swup from '@swup/astro';
 
+import pagefind from 'astro-pagefind';
 // 构建前预取 GitHub 仓库数据
 await generateGitHubCache();
 
@@ -61,7 +63,7 @@ export default defineConfig({
   }), swup({
     theme: false,
     animationClass: 'transition-slide-up',
-  }), icon(), mdx(), sitemap({
+  }), icon(), mdx(), pagefind(), sitemap({
     filter: (page) => !/\/posts\/.+\/.+/.test(new URL(page).pathname),
   }),
   oddmisc({
@@ -76,7 +78,7 @@ export default defineConfig({
     processor: satteri({
       features: { directive: true },
       mdastPlugins: [remarkGithubCard(), remarkCalloutDirective(), remarkCallout()],
-      hastPlugins: [remarkHeadingAnchor(), remarkWikilink()],
+      hastPlugins: [remarkHeadingAnchor(), remarkWikilink(), remarkFigcaption()],
     }),
   },
   site: site.url,

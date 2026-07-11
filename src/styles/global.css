@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 @import "./callout.css";
+@import "@fancyapps/ui/dist/fancybox/fancybox.css";
 
 /* ── Maple Mono 字体（代码块用）── */
 @font-face {
@@ -317,4 +318,26 @@ footer a {
 footer a:hover {
   background-color: var(--md-primary-container);
   color: var(--md-on-primary-container);
+}
+
+/* ── 图片 figure（figcaption 插件）── */
+.prose figure {
+  text-align: center;
+  margin: 1.5em 0;
+}
+.prose figure img {
+  border-radius: 0.75rem;
+  display: inline-block;
+}
+.prose figcaption {
+  margin-top: 1em;
+  font-size: 0.9rem;
+  color: var(--md-on-surface-variant);
+  opacity: 0.7;
+}
+
+/* ── Pagefind 搜索高亮 ── */
+#searchResults mark {
+  color: var(--md-primary);
+  background: none;
 }

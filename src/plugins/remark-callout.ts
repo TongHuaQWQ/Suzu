@@ -5,15 +5,33 @@
 
 const CALLOUT_PREFIX = /^\s*\[!(\w+)([+-])?\]\s*/i;
 const CALLOUT_NAMES: Record<string, string> = {
-  note: "Note", info: "Info", todo: "Todo",
-  tip: "Tip", hint: "Hint", important: "Important",
-  success: "Success", check: "Check", done: "Done",
-  question: "Question", help: "Help", faq: "FAQ",
-  warning: "Warning", caution: "Caution", attention: "Attention",
-  danger: "Danger", error: "Error", bug: "Bug",
-  example: "Example", quote: "Quote", cite: "Cite",
-  abstract: "Abstract", summary: "Summary", tldr: "TL;DR",
-  failure: "Failure", fail: "Fail", missing: "Missing",
+  note: "Note",
+  info: "Info",
+  todo: "Todo",
+  tip: "Tip",
+  hint: "Hint",
+  important: "Important",
+  success: "Success",
+  check: "Check",
+  done: "Done",
+  question: "Question",
+  help: "Help",
+  faq: "FAQ",
+  warning: "Warning",
+  caution: "Caution",
+  attention: "Attention",
+  danger: "Danger",
+  error: "Error",
+  bug: "Bug",
+  example: "Example",
+  quote: "Quote",
+  cite: "Cite",
+  abstract: "Abstract",
+  summary: "Summary",
+  tldr: "TL;DR",
+  failure: "Failure",
+  fail: "Fail",
+  missing: "Missing",
 };
 
 function getCalloutName(name: string) {
@@ -24,14 +42,22 @@ function getCalloutName(name: string) {
 
 function serializeInline(node: any): string {
   switch (node.type) {
-    case "text": return escapeHtml(node.value);
-    case "inlineCode": return `<code>${escapeHtml(node.value)}</code>`;
-    case "strong": return `<strong>${walkChildren(node)}</strong>`;
-    case "emphasis": return `<em>${walkChildren(node)}</em>`;
-    case "link": return `<a href="${escapeHtml(node.url)}">${walkChildren(node)}</a>`;
-    case "image": return `<img src="${escapeHtml(node.url)}" alt="${escapeHtml(node.alt ?? "")}" />`;
-    case "delete": return `<del>${walkChildren(node)}</del>`;
-    default: return walkChildren(node);
+    case "text":
+      return escapeHtml(node.value);
+    case "inlineCode":
+      return `<code>${escapeHtml(node.value)}</code>`;
+    case "strong":
+      return `<strong>${walkChildren(node)}</strong>`;
+    case "emphasis":
+      return `<em>${walkChildren(node)}</em>`;
+    case "link":
+      return `<a href="${escapeHtml(node.url)}">${walkChildren(node)}</a>`;
+    case "image":
+      return `<img src="${escapeHtml(node.url)}" alt="${escapeHtml(node.alt ?? "")}" />`;
+    case "delete":
+      return `<del>${walkChildren(node)}</del>`;
+    default:
+      return walkChildren(node);
   }
 }
 
@@ -68,7 +94,9 @@ function buildCalloutHtml(node: any): string | null {
     : `<blockquote class="callout callout-${type}" data-callout="${type}">` +
       `<div class="callout-title"><span class="callout-title-text">${escapeHtml(title)}</span></div>`;
   const foot = collapsible ? `</details>` : `</blockquote>`;
-  return head + (inner ? `<div class="callout-content">${inner}</div>` : "") + foot;
+  return (
+    head + (inner ? `<div class="callout-content">${inner}</div>` : "") + foot
+  );
 }
 
 function serializeBlock(node: any): string {
@@ -134,5 +162,9 @@ export function remarkCalloutDirective() {
 }
 
 function escapeHtml(str: string): string {
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }

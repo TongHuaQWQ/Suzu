@@ -14,25 +14,22 @@ import { site } from "../../site.config";
 
   <!-- 中间：主要导航链接 -->
   <ul class="hidden md:flex gap-1">
-    {site.nav.map((item) => (
-      <li>
-        <a
-          href={item.href}
-          class="px-4 py-2 rounded-xl transition-colors hover:bg-(--md-primary-container) hover:text-(--md-on-primary-container) text-(--md-on-surface-variant)"
-        >
-          {item.label}
-        </a>
-      </li>
-    ))}
+    {
+      site.nav.map((item) => (
+        <li>
+          <a
+            href={item.href}
+            class="px-4 py-2 rounded-xl transition-colors hover:bg-(--md-primary-container) hover:text-(--md-on-primary-container) text-(--md-on-surface-variant)"
+          >
+            {item.label}
+          </a>
+        </li>
+      ))
+    }
   </ul>
 
   <!-- 右侧：图标按钮 -->
   <div class="flex gap-2">
-    <button
-      class="p-2 rounded-xl border border-(--md-outline-variant) hover:bg-(--md-surface-container-low) text-(--md-on-surface-variant) transition-colors"
-    >
-      <Icon name="mingcute:github-line" class="w-5 h-5" />
-    </button>
     <button
       class="p-2 rounded-xl border border-(--md-outline-variant) hover:bg-(--md-surface-container-low) text-(--md-on-surface-variant) transition-colors"
     >
@@ -45,7 +42,8 @@ import { site } from "../../site.config";
         type="text"
         id="searchInput"
         placeholder="搜索文章..."
-        class="w-0 opacity-0 overflow-hidden rounded-xl border border-(--md-outline-variant) bg-(--md-surface-container-low) px-0 py-2 text-sm text-(--md-on-surface-variant) transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-(--md-primary-container) peer"
+        autocomplete="off"
+        class="w-0 opacity-0 overflow-hidden rounded-xl border border-(--md-outline-variant) bg-(--md-surface-container-low) px-0 py-2 text-base text-(--md-on-surface-variant) transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-(--md-primary-container) peer"
       />
 
       <!-- 搜索按钮 -->
@@ -55,13 +53,23 @@ import { site } from "../../site.config";
       >
         <Icon name="mingcute:search-2-line" class="w-5 h-5" />
       </button>
+
+      <!-- 搜索结果下拉 -->
+      <div
+        id="searchResults"
+        class="hidden fixed md:absolute top-25 md:top-15 left-1/2 -translate-x-1/2 md:left-auto md:right-0 md:translate-x-0 mt-2 w-[calc(100%-2rem)] md:w-110 max-h-[70vh] md:max-h-96 overflow-y-auto bg-(--md-surface-container-lowest) p-2 z-50 rounded-2xl shadow-lg"
+        style="scrollbar-color: var(--md-outline-variant) transparent"
+      >
+      </div>
     </div>
   </div>
 </nav>
 
 <script>
   const searchBtn = document.getElementById("searchBtn");
-  const searchInput = document.getElementById("searchInput") as HTMLInputElement | null;
+  const searchInput = document.getElementById(
+    "searchInput",
+  ) as HTMLInputElement | null;
   if (!searchBtn || !searchInput) throw new Error("Search elements not found");
 
   let isOpen = false;
@@ -80,10 +88,123 @@ import { site } from "../../site.config";
 
   searchBtn.addEventListener("click", () => setSearch(!isOpen));
   document.addEventListener("click", (e) => {
-    if (isOpen && !searchBtn.contains(e.target as Node) && !searchInput.contains(e.target as Node))
+    if (
+      isOpen &&
+      !searchBtn.contains(e.target as Node) &&
+      !searchInput.contains(e.target as Node)
+    )
       setSearch(false);
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && isOpen) setSearch(false);
+  });
+
+  // ── Pagefind 即时搜索 ──
+  const resultsEl = document.getElementById("searchResults")!;
+  let pagefind: any = null;
+  let debounceTimer: number | undefined;
+
+  searchInput!.addEventListener("input", () => {
+    clearTimeout(debounceTimer);
+    const q = searchInput!.value.trim();
+    if (!q) {
+      resultsEl.classList.add("hidden");
+      resultsEl.innerHTML = "";
+      return;
+    }
+
+    debounceTimer = window.setTimeout(async () => {
+      const $import = new Function("url", "return import(url)");
+      const pf = await $import("/pagefind/pagefind.js");
+      const { results } = await pf.search(q);
+      if (!results.length) {
+        resultsEl.innerHTML = `<div class="p-3 text-sm text-(--md-on-surface-variant) opacity-60">未找到结果</div>`;
+        resultsEl.classList.remove("hidden");
+        return;
+      }
+
+      const items = await Promise.all(results.map((r: any) => r.data()));
+      // 按 URL 去重（同一篇文章的标签/分类路由合并为一条）
+      const seen = new Set<string>();
+      const deduped = items.filter((item: any) => {
+        const key = item.meta?.title || item.url;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      resultsEl.innerHTML = deduped
+        .slice(0, 6)
+        .map(
+          (item: any) => `
+        <a href="${item.url}" class="block p-2 rounded-lg hover:bg-(--md-surface-container) transition-colors" data-search-result>
+          <div class="text-base font-bold text-(--md-on-surface)">${item.meta?.title || item.url}</div>
+          <div class="text-xs text-(--md-on-surface-variant) opacity-60 line-clamp-2">${item.excerpt}</div>
+        </a>
+      `,
+        )
+        .join("");
+      resultsEl.classList.remove("hidden");
+    }, 200);
+  });
+
+  // 回车立即搜索
+  searchInput!.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    const q = searchInput!.value.trim();
+    if (!q) return;
+    clearTimeout(debounceTimer);
+    (async () => {
+      const $import = new Function("url", "return import(url)");
+      const pf = await $import("/pagefind/pagefind.js");
+      const { results } = await pf.search(q);
+      if (!results.length) {
+        resultsEl.innerHTML = `<div class="p-3 text-sm text-(--md-on-surface-variant) opacity-60">未找到结果</div>`;
+        resultsEl.classList.remove("hidden");
+        return;
+      }
+      const items = await Promise.all(results.map((r: any) => r.data()));
+      const seen = new Set<string>();
+      const deduped = items.filter((item: any) => {
+        const k = item.meta?.title || item.url;
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
+      resultsEl.innerHTML = deduped
+        .slice(0, 6)
+        .map(
+          (item: any) => `
+        <a href="${item.url}" class="block p-2 rounded-lg hover:bg-(--md-surface-container) transition-colors" data-search-result>
+          <div class="text-base font-bold text-(--md-on-surface)">${item.meta?.title || item.url}</div>
+          <div class="text-xs text-(--md-on-surface-variant) opacity-60 line-clamp-2">${item.excerpt}</div>
+        </a>
+      `,
+        )
+        .join("");
+      resultsEl.classList.remove("hidden");
+    })();
+  });
+
+  // 点击结果面板外部关闭
+  document.addEventListener("click", (e) => {
+    const target = e.target as Node;
+    if (
+      resultsEl.contains(target) ||
+      searchInput!.contains(target) ||
+      searchBtn.contains(target)
+    )
+      return;
+    resultsEl.classList.add("hidden");
+  });
+
+  // 点击搜索结果自动关闭
+  resultsEl.addEventListener("click", (e) => {
+    const link = (e.target as HTMLElement).closest(
+      "[data-search-result]",
+    ) as HTMLAnchorElement | null;
+    if (!link) return;
+    resultsEl.classList.add("hidden");
+    searchInput!.value = "";
+    setSearch(false);
   });
 </script>

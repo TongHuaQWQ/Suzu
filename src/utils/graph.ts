@@ -64,7 +64,7 @@ export async function buildGraphData(): Promise<GraphData> {
 
   // 提取出链，构建边和反向链接
   for (const post of posts) {
-    const links = extractWikilinks(post.body ?? "");
+    const links = [...new Set(extractWikilinks(post.body ?? ""))];
     for (const target of links) {
       // 1. 优先完全匹配
       if (slugMap.has(target)) {

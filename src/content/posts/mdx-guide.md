@@ -182,6 +182,7 @@ image: "../../assets/cover.jpg"
 ```markdown
 ![描述](图片路径)
 ```
+![图片](../../assets/posts/2026.jpg)
 
 ## Frontmatter 字段说明
 
@@ -198,6 +199,7 @@ series: "系列名" # 可选，系列
 ---
 ```
 
+![博客首页](../../assets/projects/Suzu.png)
 ## 写作建议
 
 - 每篇文章都写 `description`，方便在卡片中预览
