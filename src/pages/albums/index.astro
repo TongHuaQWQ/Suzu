@@ -1,0 +1,183 @@
+---
+import { getCollection } from "astro:content";
+import { Icon } from "astro-icon/components";
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+import SidebarLayout from "../../layouts/SidebarLayout.astro";
+import fs from "node:fs";
+import path from "node:path";
+
+const allAlbums = (await getCollection("albums"))
+  .filter((a) => !a.data.hidden)
+  .sort(
+    (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime(),
+  );
+
+// 导入 src/assets/albums/ 图片
+const allImages = import.meta.glob<{ default: ImageMetadata }>(
+  "../../assets/albums/**/*.{jpg,jpeg,png,webp}",
+  { eager: true },
+);
+
+// 为每个相册找封面和统计
+const albumsWithCovers = allAlbums.map((album) => {
+  let coverImg: ImageMetadata | string | null = null;
+  let photoCount = 0;
+
+  // 合并两个来源的数量
+  // 1. src/assets/albums/
+  const assetPrefix = `../../assets/albums/${album.id}/`;
+  const assetPhotos = Object.keys(allImages).filter((p) =>
+    p.startsWith(assetPrefix),
+  );
+  photoCount += assetPhotos.length;
+
+  if (assetPhotos.length > 0) {
+    if (album.data.cover) {
+      const mod = allImages[album.data.cover];
+      if (mod) coverImg = mod.default;
+    }
+    if (!coverImg) {
+      const first = allImages[assetPhotos[0]];
+      if (first) coverImg = first.default;
+    }
+  }
+
+  // 2. public/photos/（仅计数，封面用第一张）
+  const publicDir = path.join(process.cwd(), "public", "photos", album.id);
+  try {
+    const files = fs.readdirSync(publicDir);
+    const photos = files.filter((f) => /(\.(jpg|jpeg|png|webp))$/i.test(f));
+    photoCount += photos.length;
+
+    if (!coverImg && photos.length > 0) {
+      coverImg = `/photos/${album.id}/${photos[0]}`;
+    }
+  } catch {
+    // public/photos/{id}/ 不存在
+  }
+
+  // 3. frontmatter.photos（外部链接）
+  if (album.data.photos) {
+    photoCount += album.data.photos.length;
+    if (!coverImg && album.data.photos.length > 0) {
+      coverImg = album.data.photos[0];
+    }
+  }
+
+  return { ...album, coverImg, photoCount };
+});
+---
+
+<SidebarLayout title="相册">
+  <div class="card p-6 md:p-9 animate-fade-up">
+    <h1
+      class="relative text-2xl font-bold text-(--md-on-surface) mb-6
+      before:content-[''] before:absolute before:-left-4 before:top-1/2 before:-translate-y-1/2
+      before:w-1 before:h-6 before:rounded-md before:bg-(--md-primary)"
+    >
+      相册
+    </h1>
+
+    {albumsWithCovers.length === 0 && (
+      <p class="text-sm text-(--md-on-surface-variant)/60 text-center py-12">
+        还没有相册
+      </p>
+    )}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      {albumsWithCovers.map((album, i) => {
+        const hasExternalPhotos = !!(album.data.photos && album.data.photos.length > 0) || album.data.mode === "external";
+        return (
+        <a
+          href={`/albums/${album.id}`}
+          class="group card overflow-hidden animate-fade-up
+            border border-(--md-outline-variant)/40
+            hover:border-(--md-primary)/20 hover:shadow-md hover:shadow-(--md-primary)/5
+            transition-all duration-300"
+          style={`animation-delay: ${i * 60}ms`}
+        >
+          <!-- 封面图 -->
+          <div class="aspect-3/2 overflow-hidden bg-(--md-surface-container-low)">
+            {album.coverImg ? (
+              typeof album.coverImg === "object" ? (
+                <Image
+                  src={album.coverImg}
+                  alt={album.data.title}
+                  width={600}
+                  height={400}
+                  class="w-full h-full object-cover
+                    group-hover:scale-105 transition-transform duration-500"
+                />
+              ) : (
+                <img
+                  src={album.coverImg}
+                  alt={album.data.title}
+                  class="w-full h-full object-cover
+                    group-hover:scale-105 transition-transform duration-500"
+                />
+              )
+            ) : (
+              <div class="w-full h-full flex items-center justify-center text-(--md-on-surface-variant)/20">
+                <Icon name="mingcute:camera-2-line" class="w-12 h-12" />
+              </div>
+            )}
+          </div>
+
+          <div class="p-4">
+            <div class="flex items-center gap-2">
+              <h2
+                class="font-bold text-base text-(--md-on-surface)
+                group-hover:text-(--md-primary) transition-colors duration-200 truncate"
+              >
+                {album.data.title}
+              </h2>
+              {hasExternalPhotos && (
+                <span class="shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded-md
+                  bg-(--md-primary-container)/70 text-(--md-on-primary-container)">
+                  外链
+                </span>
+              )}
+            </div>
+
+            {album.data.description && (
+              <p class="mt-1 text-sm text-(--md-on-surface-variant) line-clamp-2">
+                {album.data.description}
+              </p>
+            )}
+
+            <div class="flex items-center gap-3 mt-2 text-xs text-(--md-on-surface-variant)/50">
+              <span class="flex items-center gap-1">
+                <Icon name="gravity-ui:calendar" class="w-3 h-3" />
+                {album.data.date}
+              </span>
+              <span class="flex items-center gap-1">
+                <Icon name="mingcute:camera-2-line" class="w-3 h-3" />
+                {album.photoCount} 张
+              </span>
+              {album.data.location && (
+                <span class="flex items-center gap-1">
+                  <Icon name="gravity-ui:map-pin" class="w-3 h-3" />
+                  {Array.isArray(album.data.location) ? album.data.location.join(" · ") : album.data.location}
+                </span>
+              )}
+            </div>
+
+            {album.data.tags && album.data.tags.length > 0 && (
+              <div class="flex flex-wrap gap-1.5 mt-2">
+                {album.data.tags.map((tag) => (
+                  <span
+                    class="text-[11px] px-1.5 py-0.5 rounded-md
+                    bg-(--md-surface-container-low) text-(--md-on-surface-variant)/60"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </a>
+      ); })}
+    </div>
+  </div>
+</SidebarLayout>

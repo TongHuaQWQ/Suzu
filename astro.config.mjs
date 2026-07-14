@@ -63,6 +63,7 @@ export default defineConfig({
   }), swup({
     theme: false,
     animationClass: 'transition-slide-up',
+    ignore: ['a[data-fancybox]', 'a[data-no-swup]'],
   }), icon(), mdx(), pagefind(), sitemap({
     filter: (page) => !/\/posts\/.+\/.+/.test(new URL(page).pathname),
   }),

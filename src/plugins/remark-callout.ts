@@ -1,72 +1,81 @@
 /**
  * Satteri MDAST 插件：将 > [!NOTE] / :::tip 语法转换为 callout 容器。
  * 图标由构建时 CSS（mask-image）注入，本插件只输出 class + 标题文字。
+ *
+ * 返回结构化 MDAST 节点，不走 Rust 重解析，避免 {slug} 中的 { 和 } 
+ * 被当作 MDX 模板定界符转义。
  */
 
 const CALLOUT_PREFIX = /^\s*\[!(\w+)([+-])?\]\s*/i;
 const CALLOUT_NAMES: Record<string, string> = {
-  note: "Note",
-  info: "Info",
-  todo: "Todo",
-  tip: "Tip",
-  hint: "Hint",
-  important: "Important",
-  success: "Success",
-  check: "Check",
-  done: "Done",
-  question: "Question",
-  help: "Help",
-  faq: "FAQ",
-  warning: "Warning",
-  caution: "Caution",
-  attention: "Attention",
-  danger: "Danger",
-  error: "Error",
-  bug: "Bug",
-  example: "Example",
-  quote: "Quote",
-  cite: "Cite",
-  abstract: "Abstract",
-  summary: "Summary",
-  tldr: "TL;DR",
-  failure: "Failure",
-  fail: "Fail",
-  missing: "Missing",
+  note: "Note", info: "Info", todo: "Todo", tip: "Tip", hint: "Hint",
+  important: "Important", success: "Success", check: "Check", done: "Done",
+  question: "Question", help: "Help", faq: "FAQ",
+  warning: "Warning", caution: "Caution", attention: "Attention",
+  danger: "Danger", error: "Error", bug: "Bug",
+  example: "Example", quote: "Quote", cite: "Cite",
+  abstract: "Abstract", summary: "Summary", tldr: "TL;DR",
+  failure: "Failure", fail: "Fail", missing: "Missing",
 };
 
 function getCalloutName(name: string) {
   return CALLOUT_NAMES[name.toLowerCase()] ?? null;
 }
 
-// ── MDAST → HTML 序列化 ──
+// ── MDAST 节点构建（完全避免 data.hProperties，用原生 HAST 属性通道） ──
 
-function serializeInline(node: any): string {
-  switch (node.type) {
-    case "text":
-      return escapeHtml(node.value);
-    case "inlineCode":
-      return `<code>${escapeHtml(node.value)}</code>`;
-    case "strong":
-      return `<strong>${walkChildren(node)}</strong>`;
-    case "emphasis":
-      return `<em>${walkChildren(node)}</em>`;
-    case "link":
-      return `<a href="${escapeHtml(node.url)}">${walkChildren(node)}</a>`;
-    case "image":
-      return `<img src="${escapeHtml(node.url)}" alt="${escapeHtml(node.alt ?? "")}" />`;
-    case "delete":
-      return `<del>${walkChildren(node)}</del>`;
-    default:
-      return walkChildren(node);
-  }
+/** 创建带 class 的 blockquote */
+function makeCalloutBlockquote(type: string, children: any[]): any {
+  return {
+    type: "blockquote",
+    data: {
+      hProperties: {
+        className: ["callout", `callout-${type}`],
+        "data-callout": type,
+      },
+    },
+    children,
+  };
 }
 
-function walkChildren(node: any): string {
-  return node.children?.map(serializeInline).join("") ?? "";
+/** 创建简单 div 包装器 */
+function makeDiv(className: string, children: any[]): any {
+  return {
+    type: "paragraph",
+    data: {
+      hName: "div",
+      hProperties: { className: [className] },
+    },
+    children,
+  };
 }
 
-/** 检测 blockquote 节点是否是 callout，是则返回 callout HTML，否则返回 null */
-function buildCalloutHtml(node: any): string | null {
+/** 创建简单 span 包装器 */
+function makeSpan(className: string, children: any[]): any {
+  return {
+    type: "emphasis",
+    data: {
+      hName: "span",
+      hProperties: { className: [className] },
+    },
+    children,
+  };
+}
+
+/** 构建完整 callout 节点 */
+function buildCalloutNode(type: string, title: string, children: any[]): any {
+  return makeCalloutBlockquote(type, [
+    makeDiv("callout-title", [
+      makeSpan("callout-title-text", [
+        { type: "text", value: title },
+      ]),
+    ]),
+    makeDiv("callout-content", children),
+  ]);
+}
+
+/** 检测并转换 > [!NOTE] blockquote */
+function detectCallout(node: any): any | null {
   const p = node.children?.[0];
   if (p?.type !== "paragraph") return null;
   const tn = p.children?.[0];
@@ -76,53 +85,17 @@ function buildCalloutHtml(node: any): string | null {
   const type = m[1].toLowerCase();
   const label = getCalloutName(m[1]);
   if (!label) return null;
-  const collapsible = m[2] != null;
-  const defaultOpen = m[2] !== "-";
   const titleLine = tn.value.slice(m[0].length).split("\n")[0].trim();
   const title = titleLine || label;
 
-  const inner = node.children
-    .map(serializeBlock)
-    .join("")
-    .replace(/^<p>\s*\[!\w+[+-]?\][^\n]*\n?/, "<p>")
-    .replace(/^<p>\s*<\/p>$/m, "")
-    .trim();
-
-  const head = collapsible
-    ? `<details class="callout callout-${type}" data-callout="${type}"${defaultOpen ? " open" : ""}>` +
-      `<summary class="callout-title"><span class="callout-title-text">${escapeHtml(title)}</span></summary>`
-    : `<blockquote class="callout callout-${type}" data-callout="${type}">` +
-      `<div class="callout-title"><span class="callout-title-text">${escapeHtml(title)}</span></div>`;
-  const foot = collapsible ? `</details>` : `</blockquote>`;
-  return (
-    head + (inner ? `<div class="callout-content">${inner}</div>` : "") + foot
-  );
-}
-
-function serializeBlock(node: any): string {
-  // 嵌套 callout 检测
-  if (node.type === "blockquote") {
-    const r = buildCalloutHtml(node);
-    if (r) return r;
+  // 去掉 [!NOTE] 前缀
+  tn.value = tn.value.slice(m[0].length);
+  let contentChildren = node.children;
+  if (tn.value.trim() === "" && p.children.length === 1) {
+    contentChildren = node.children.slice(1);
   }
-  switch (node.type) {
-    case "paragraph":
-      return `<p>${walkChildren(node)}</p>\n`;
-    case "list": {
-      const tag = node.ordered ? "ol" : "ul";
-      return `<${tag}>\n${(node.children ?? []).map((item: any) => `<li>${walkChildren(item)}</li>\n`).join("")}</${tag}>\n`;
-    }
-    case "code":
-      return `<pre><code${node.lang ? ` class="language-${escapeHtml(node.lang)}"` : ""}>${escapeHtml(node.value)}</code></pre>\n`;
-    case "heading":
-      return `<h${node.depth || 2}>${walkChildren(node)}</h${node.depth || 2}>\n`;
-    case "blockquote":
-      return `<blockquote>${node.children?.map(serializeBlock).join("") ?? ""}</blockquote>\n`;
-    case "thematicBreak":
-      return "<hr>\n";
-    default:
-      return walkChildren(node);
-  }
+
+  return buildCalloutNode(type, title, contentChildren);
 }
 
 // ── MDAST Plugin: > [!NOTE] blockquote 语法 ──
@@ -131,8 +104,8 @@ export function remarkCallout() {
   return {
     name: "remark-callout",
     blockquote(node: any) {
-      const html = buildCalloutHtml(node);
-      if (html) return { rawHtml: html };
+      const result = detectCallout(node);
+      if (result) return result;
     },
   };
 }
@@ -148,23 +121,7 @@ export function remarkCalloutDirective() {
       const type = node.name.toLowerCase();
       const title = node.attributes?.label ?? label;
 
-      const inner = (node.children ?? []).map(serializeBlock).join("");
-
-      return {
-        rawHtml:
-          `<blockquote class="callout callout-${type}" data-callout="${type}">` +
-          `<div class="callout-title"><span class="callout-title-text">${escapeHtml(title)}</span></div>` +
-          (inner ? `<div class="callout-content">${inner}</div>` : "") +
-          `</blockquote>`,
-      };
+      return buildCalloutNode(type, title, node.children ?? []);
     },
   };
-}
-
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }

@@ -1,0 +1,331 @@
+---
+import { getCollection } from "astro:content";
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+import SidebarLayout from "../../layouts/SidebarLayout.astro";
+import { Icon } from "astro-icon/components";
+import fs from "node:fs";
+import path from "node:path";
+
+export async function getStaticPaths() {
+  const albums = await getCollection("albums");
+  return albums.map((album) => ({
+    params: { slug: album.id },
+    props: { album },
+  }));
+}
+
+const { album } = Astro.props;
+
+// ── 加载图片：合并 src/assets + public/photos + photos 字段 ──
+const assetImages = import.meta.glob<{ default: ImageMetadata }>(
+  "../../assets/albums/**/*.{jpg,jpeg,png,webp}",
+  { eager: true },
+);
+
+const assetPrefix = `../../assets/albums/${album.id}/`;
+const albumImages: {
+  src: ImageMetadata | string;
+  width?: number;
+  height?: number;
+  isOptimized: boolean;
+  name: string;
+}[] = [];
+
+// 1. src/assets/albums/{id}/ （优化图片）
+for (const [filePath, mod] of Object.entries(assetImages)) {
+  if (filePath.startsWith(assetPrefix) && !filePath.includes("cover")) {
+    albumImages.push({
+      src: mod.default,
+      width: mod.default.width,
+      height: mod.default.height,
+      isOptimized: true,
+      name: filePath.split("/").pop() || "",
+    });
+  }
+}
+
+// 2. public/photos/{id}/ （原图）
+const publicDir = path.join(process.cwd(), "public", "photos", album.id);
+try {
+  const files = fs.readdirSync(publicDir);
+  const existingNames = new Set(albumImages.map((img) => img.name));
+  for (const file of files) {
+    if (/\.(jpg|jpeg|png|webp)$/i.test(file) && !existingNames.has(file)) {
+      albumImages.push({
+        src: `/photos/${album.id}/${file}`,
+        isOptimized: false,
+        name: file,
+      });
+    }
+  }
+} catch {
+  // public/photos/{id}/ 不存在
+}
+
+// 3. frontmatter.photos （外部链接）
+if (album.data.photos) {
+  for (const url of album.data.photos) {
+    albumImages.push({
+      src: url,
+      isOptimized: false,
+      name: url.split("/").pop() || url,
+    });
+  }
+}
+
+albumImages.sort((a, b) => a.name.localeCompare(b.name));
+
+// 预处理 imgUrl
+const albumPhotos = albumImages.map((img) => ({
+  ...img,
+  imgUrl: typeof img.src === "object" ? img.src.src : img.src,
+}));
+
+// ── 封面图 ──
+let coverImg: ImageMetadata | string | null = null;
+if (album.data.cover) {
+  coverImg = album.data.cover;
+} else if (albumImages.length > 0) {
+  coverImg = albumImages[0].src;
+}
+const hasAssetImages = albumImages.some((img) => img.isOptimized);
+const hasExternalPhotos = !!(album.data.photos && album.data.photos.length > 0);
+---
+
+<SidebarLayout title={album.data.title}>
+  <article class="card overflow-hidden animate-fade-up">
+    <!-- 封面区域 -->
+    {
+      coverImg ? (
+        <div class="relative w-full h-56 md:h-72 overflow-hidden bg-(--md-surface-container-low)">
+          {typeof coverImg === "object" ? (
+            <Image
+              src={coverImg}
+              alt={album.data.title}
+              width={1200}
+              class="w-full h-full object-cover"
+            />
+          ) : (
+            <img
+              src={coverImg}
+              alt={album.data.title}
+              class="w-full h-full object-cover"
+            />
+          )}
+          <div class="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
+          <!-- 返回按钮 -->
+          <a
+            href="/albums"
+            class="absolute top-4 left-4 md:top-6 md:left-6 z-10
+              flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+              bg-black/30 text-white/80 text-sm
+              hover:bg-black/50 hover:text-white
+              transition-colors duration-200 backdrop-blur-sm"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 12H5" />
+              <path d="m12 19-7-7 7-7" />
+            </svg>
+            返回相册列表
+          </a>
+          <div class="absolute bottom-0 left-0 right-0 p-6 md:p-9 space-y-3">
+            <h1 class="text-3xl md:text-4xl font-bold text-white drop-shadow-sm leading-tight">
+              {album.data.title}
+            </h1>
+            {
+              album.data.description && (
+                <p class="text-base text-white/80 leading-relaxed max-w-lg">
+                  {album.data.description}
+                </p>
+              )
+            }
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-base text-white/70">
+              <span class="flex items-center gap-1.5">
+                <Icon name="gravity-ui:calendar" class="w-4 h-4" />
+                {album.data.date}
+              </span>
+              <span class="flex items-center gap-1.5">
+                <Icon name="mingcute:camera-2-line" class="w-4 h-4" />
+                {albumImages.length} 张
+              </span>
+              {
+                album.data.location && (
+                  <span class="flex items-center gap-1.5">
+                    <Icon name="gravity-ui:map-pin" class="w-4 h-4" />
+                    {Array.isArray(album.data.location)
+                      ? album.data.location.join(" · ")
+                      : album.data.location}
+                  </span>
+                )
+              }
+              {
+                hasExternalPhotos && !hasAssetImages && (
+                  <span class="text-xs px-2 py-0.5 rounded-md bg-white/20 text-white/80">
+                    外链
+                  </span>
+                )
+              }
+              {
+                !hasAssetImages && albumImages.length > 0 && !hasExternalPhotos && (
+                  <span class="text-xs px-2 py-0.5 rounded-md bg-white/15 text-white/70">
+                    原图
+                  </span>
+                )
+              }
+            </div>
+            {
+              album.data.tags && album.data.tags.length > 0 && (
+                <div class="flex flex-wrap gap-2 pt-1">
+                  {album.data.tags.map((tag) => (
+                    <span class="text-xs px-2.5 py-1 rounded-md bg-white/15 text-white/80 backdrop-blur-sm">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )
+            }
+          </div>
+        </div>
+      ) : (
+        <div class="px-6 md:px-9 pt-7 pb-2">
+          <h1
+            class="relative text-2xl font-bold text-(--md-on-surface) mb-3
+          before:content-[''] before:absolute before:-left-4 before:top-1/2 before:-translate-y-1/2
+          before:w-1 before:h-6 before:rounded-md before:bg-(--md-primary)"
+          >
+            {album.data.title}
+          </h1>
+          {
+            album.data.description && (
+              <p class="text-sm text-(--md-on-surface-variant)/80 leading-relaxed">
+                {album.data.description}
+              </p>
+            )
+          }
+          <div class="flex flex-wrap items-center gap-3 text-sm text-(--md-on-surface-variant) mt-2">
+            <span class="flex items-center gap-1">
+              <Icon name="gravity-ui:calendar" class="w-3.5 h-3.5" />
+              {album.data.date}
+            </span>
+            <span class="flex items-center gap-1">
+              <Icon name="mingcute:camera-2-line" class="w-3.5 h-3.5" />
+              {albumImages.length} 张
+            </span>
+            {
+              album.data.location && (
+                <span class="flex items-center gap-1">
+                  <Icon name="gravity-ui:map-pin" class="w-3.5 h-3.5" />
+                  {Array.isArray(album.data.location)
+                    ? album.data.location.join(" · ")
+                    : album.data.location}
+                </span>
+              )
+            }
+            {
+              hasExternalPhotos && !hasAssetImages && (
+                <span class="text-xs px-1.5 py-0.5 rounded-md bg-(--md-primary-container)/70 text-(--md-on-primary-container)">
+                  外链
+                </span>
+              )
+            }
+          </div>
+          {
+            album.data.tags && album.data.tags.length > 0 && (
+              <div class="flex flex-wrap gap-1.5 mt-3">
+                {album.data.tags.map((tag) => (
+                  <span class="text-xs px-2 py-0.5 rounded-md bg-(--md-primary-container)/60 text-(--md-on-primary-container)">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )
+          }
+        </div>
+      )
+    }
+
+    <div class="px-6 md:px-9 pb-8">
+
+      <!-- 照片瀑布 -->
+      {
+        albumImages.length > 0 && (
+          <>
+            <div class="mt-5 mb-5 border-t border-dashed border-(--md-outline-variant)" />
+            <div class="album-masonry">
+              {albumPhotos.map((img, i) => (
+                <a
+                  href={img.imgUrl}
+                  data-no-swup
+                  data-fancybox="album"
+                  data-no-swup
+                  class="group block overflow-hidden rounded-xl bg-(--md-surface-container-low) hover:shadow-md transition-shadow duration-300"
+                  style={
+                    img.width
+                      ? `aspect-ratio: ${img.width} / ${img.height}`
+                      : undefined
+                  }
+                >
+                  {img.isOptimized ? (
+                    <Image
+                      src={img.src as ImageMetadata}
+                      alt=""
+                      width={500}
+                      decoding="async"
+                      class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading={i < 6 ? "eager" : "lazy"}
+                    />
+                  ) : (
+                    <img
+                      src={img.src as string}
+                      alt=""
+                      decoding="async"
+                      loading={i < 6 ? "eager" : "lazy"}
+                      class="w-full h-auto group-hover:scale-105 transition-transform duration-500"
+                    />
+                  )}
+                </a>
+              ))}
+            </div>
+          </>
+        )
+      }
+
+      {
+        albumImages.length === 0 && (
+          <div class="text-center py-16 text-(--md-on-surface-variant)/40">
+            <Icon
+              name="mingcute:camera-2-line"
+              class="w-16 h-16 mx-auto mb-3"
+            />
+            <p class="text-sm">这个相册还没有照片</p>
+          </div>
+        )
+      }
+    </div>
+  </article>
+</SidebarLayout>
+
+<style>
+  .album-masonry {
+    columns: 2;
+    column-gap: 0.75rem;
+  }
+  .album-masonry > a {
+    break-inside: avoid;
+    margin-bottom: 0.75rem;
+    display: block;
+    cursor: zoom-in;
+    position: relative;
+    overflow: hidden;
+  }
+  @media (min-width: 768px) {
+    .album-masonry {
+      columns: 2;
+      column-gap: 1rem;
+    }
+    .album-masonry > a {
+      margin-bottom: 1rem;
+    }
+  }
+</style>

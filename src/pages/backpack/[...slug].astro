@@ -1,0 +1,119 @@
+---
+import { getCollection, render } from "astro:content";
+import SidebarLayout from "../../layouts/SidebarLayout.astro";
+import { Icon } from "astro-icon/components";
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+
+const imageModules = import.meta.glob<{ default: ImageMetadata }>(
+  "../../assets/**/*.{jpg,jpeg,png,webp,svg}",
+  { eager: true },
+);
+
+export async function getStaticPaths() {
+  const devices = await getCollection("backpack");
+  return devices.map((device) => ({
+    params: { slug: device.id },
+    props: { device },
+  }));
+}
+
+const { device } = Astro.props;
+const { Content, headings } = await render(device);
+
+const hasImage = !!device.data.image;
+const coverImage = hasImage
+  ? (imageModules[device.data.image!]?.default ?? null)
+  : null;
+
+const statusColor =
+  device.data.status === "使用中"
+    ? "bg-green-100 text-green-700"
+    : "bg-(--md-surface-container-high) text-(--md-on-surface-variant)";
+---
+
+<SidebarLayout title={device.data.title} headings={headings}>
+  <article class="card overflow-hidden animate-fade-up">
+    <!-- 封面图 -->
+    {coverImage && (
+      <div class="relative w-full h-48 md:h-72 overflow-hidden bg-(--md-surface-container-low)">
+        <Image
+          src={coverImage}
+          alt={device.data.title}
+          width={800}
+          height={800}
+          class="w-full h-full object-contain p-4"
+        />
+        <div class="absolute inset-0 bg-linear-to-t from-(--md-surface)/30 to-transparent pointer-events-none" />
+      </div>
+    )}
+
+    <div class="article-content pl-6 md:pl-9 pr-6 md:pr-9 pt-7 pb-8">
+      <!-- 标题 -->
+      <h1
+        class="relative font-bold text-3xl md:text-4xl text-(--md-on-surface)
+        before:content-[''] before:absolute before:-left-4 before:top-1/2 before:-translate-y-1/2
+        before:w-1 before:h-6 before:rounded-md before:bg-(--md-primary)
+        hidden md:block"
+      >
+        {device.data.title}
+      </h1>
+      <h1 class="font-bold text-3xl text-(--md-on-surface) md:hidden">
+        {device.data.title}
+      </h1>
+
+      <!-- 元信息 -->
+      <div
+        class="flex flex-wrap items-center gap-3 mt-3 text-sm text-(--md-on-surface-variant)"
+      >
+        <span class="flex items-center gap-1">
+          <Icon name="gravity-ui:calendar" class="w-3.5 h-3.5" />
+          {device.data.year} 年
+        </span>
+        {device.data.category && (
+          <span class="flex items-center gap-1">
+            <Icon name="gravity-ui:folder" class="w-3.5 h-3.5" />
+            {device.data.category}
+          </span>
+        )}
+        <span
+          class={`px-2 py-0.5 text-xs font-medium rounded-md ${statusColor}`}
+        >
+          {device.data.status}
+        </span>
+      </div>
+
+      <!-- 描述 & 理由 -->
+      <div class="mt-4 space-y-2">
+        <p class="text-(--md-on-surface-variant) leading-relaxed">
+          <span class="font-medium text-(--md-on-surface)">简介：</span>
+          {device.data.description}
+        </p>
+        {device.data.reason && (
+          <p class="text-(--md-on-surface-variant) leading-relaxed">
+            <span class="font-medium text-(--md-on-surface)">选择理由：</span>
+            {device.data.reason}
+          </p>
+        )}
+      </div>
+
+      <!-- 分隔线（仅当有正文内容时才显示） -->
+      {device.body && device.body.trim().length > 0 && (
+        <div
+          class="mt-6 mb-8 border-t border-dashed border-(--md-outline-variant)"
+        ></div>
+      )}
+
+      <!-- 正文 -->
+      {device.body && device.body.trim().length > 0 && (
+        <div
+          class="prose prose-md max-w-none leading-relaxed
+        prose-h1:text-3xl prose-h1:md:text-4xl
+        prose-li:marker:text-(--md-primary)"
+        >
+          <Content />
+        </div>
+      )}
+    </div>
+  </article>
+</SidebarLayout>

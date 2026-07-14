@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "Astro docs": {
+      "url": "https://mcp.docs.astro.build/mcp",
+      "lifecycle": "lazy",
+      "directTools": false,
+      "auth": false
+    }
+  }
+}

@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import { Icon } from "astro-icon/components";
 import SidebarLayout from "../../layouts/SidebarLayout.astro";
 import Backpack from "../../components/backpack/Backpack.astro";
 
@@ -8,7 +9,7 @@ const devices = await getCollection("backpack");
 // 动态导入所有设备图片
 const images = import.meta.glob<{ default: ImageMetadata }>(
   "../../assets/devices/*.{jpg,jpeg,png,webp}",
-  { eager: true }
+  { eager: true },
 );
 
 // 组装数据
@@ -47,36 +48,92 @@ for (const item of allItems) {
 const sortedCategories = categoryOrder.filter((cat) => grouped[cat]);
 // 不在排序列表里的分类放最后
 const extraCategories = Object.keys(grouped).filter(
-  (cat) => !categoryOrder.includes(cat)
+  (cat) => !categoryOrder.includes(cat),
 );
 const allCategories = [...sortedCategories, ...extraCategories];
+
+// 统计
+const totalCount = allItems.length;
+const activeCount = allItems.filter((item) => item.status === "使用中").length;
 ---
 
-<SidebarLayout title="我的设备">
-  <div class="space-y-6 animate-fade-up">
-    <!-- 有分类的设备 -->
-    {allCategories.map((category, index) => (
-      <div>
-        {index > 0 && (
-          <div class="border-t border-dashed border-(--md-outline-variant) my-6" />
-        )}
-        <!-- 分类标题卡片 -->
-        <div class="card px-5 py-3 mb-4 w-fit">
-          <h2 class="text-xl font-bold text-(--md-on-surface)">{category}</h2>
-        </div>
-        <!-- 设备卡片 -->
-        <Backpack items={grouped[category]} />
-      </div>
-    ))}
+<SidebarLayout title="装备墙">
+  <div class="card p-6 md:p-9 animate-fade-up">
+    <!-- ── 标题 ── -->
+    <h1
+      class="relative text-2xl font-bold text-(--md-on-surface)
+      before:content-[''] before:absolute before:-left-4 before:top-1/2 before:-translate-y-1/2
+      before:w-1 before:h-6 before:rounded-md before:bg-(--md-primary)"
+    >
+      装备墙
+    </h1>
 
-    <!-- 无分类的设备 -->
-    {uncategorized.length > 0 && (
-      <div>
-        {allCategories.length > 0 && (
-          <div class="border-t border-dashed border-(--md-outline-variant) my-6" />
-        )}
-        <Backpack items={uncategorized} />
-      </div>
-    )}
+    <!-- ── 统计元信息 ── -->
+    <div
+      class="flex flex-wrap items-center gap-4 mt-3 text-sm text-(--md-on-surface-variant)"
+    >
+      <span class="flex items-center gap-1.5">
+        <Icon name="mingcute:backpack-line" class="w-4 h-4" />
+        <span class="opacity-70">共 {totalCount} 件</span>
+      </span>
+      <span class="flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-green-500" />
+        <span class="opacity-70">{activeCount} 件在用</span>
+      </span>
+      <span class="flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-(--md-outline-variant)" />
+        <span class="opacity-70">{totalCount - activeCount} 件闲置</span>
+      </span>
+    </div>
+
+    <!-- ── 分隔线 ── -->
+    <div class="mt-6 mb-6 border-t border-dashed border-(--md-outline-variant)" />
+
+    <!-- ── 分类陈列 ── -->
+    <div class="space-y-8">
+      {allCategories.map((category, index) => (
+        <section>
+          {index > 0 && (
+            <div class="border-t border-dashed border-(--md-outline-variant) my-8" />
+          )}
+
+          <!-- 分类标题 -->
+          <div class="flex items-center gap-3 mb-4">
+            <span
+              class="relative font-bold text-lg text-(--md-on-surface) pl-4
+              before:content-[''] before:absolute before:-left-0 before:top-1/2 before:-translate-y-1/2
+              before:w-1 before:h-5 before:rounded-md before:bg-(--md-primary)"
+            >
+              {category}
+            </span>
+            <span class="hidden sm:inline text-xs text-(--md-on-surface-variant)/40">
+              {grouped[category].length} 件
+            </span>
+          </div>
+
+          <!-- 设备卡片 -->
+          <Backpack items={grouped[category]} />
+        </section>
+      ))}
+
+      <!-- 无分类的设备 -->
+      {uncategorized.length > 0 && (
+        <section>
+          {allCategories.length > 0 && (
+            <div class="border-t border-dashed border-(--md-outline-variant) my-8" />
+          )}
+          <div class="flex items-center gap-3 mb-4">
+            <span
+              class="relative font-bold text-lg text-(--md-on-surface) pl-4
+              before:content-[''] before:absolute before:-left-0 before:top-1/2 before:-translate-y-1/2
+              before:w-1 before:h-5 before:rounded-md before:bg-(--md-primary)"
+            >
+              其他
+            </span>
+          </div>
+          <Backpack items={uncategorized} />
+        </section>
+      )}
+    </div>
   </div>
 </SidebarLayout>

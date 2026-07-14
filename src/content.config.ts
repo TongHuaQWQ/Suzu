@@ -65,4 +65,20 @@ const backpack = defineCollection({
   }),
 });
 
-export const collections = { pages, posts, projects, backpack };
+// 相册
+const albums = defineCollection({
+  loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/albums" }),
+  schema: z.object({
+    title: z.string(),
+    date: z.string(),
+    description: z.string().optional(),
+    cover: z.string().optional(),
+    tags: z.array(z.string()).optional(),
+    location: z.union([z.string(), z.array(z.string())]).optional(),
+    mode: z.string().optional(),
+    hidden: z.boolean().optional(),
+    photos: z.array(z.string()).optional(),
+  }),
+});
+
+export const collections = { pages, posts, projects, backpack, albums };
