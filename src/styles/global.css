@@ -27,6 +27,8 @@
 
 :root {
   --primary:#f472b6;
+  color-scheme: light;
+
   /* ── Primary（主色）── */
   --md-primary: #8b2671;
   --md-on-primary: #ffffff;
@@ -68,6 +70,51 @@
   /* ── 分页器 ── */
   --card-bg: var(--md-surface-container-lowest);
 }
+
+/* ── 暗色模式 ── */
+.callout-content {
+  color: var(--md-on-surface-variant);
+}
+
+.dark {
+  color-scheme: dark;
+
+  --md-primary: #f4b2d4;
+  --md-on-primary: #4a113b;
+  --md-primary-container: #6b2555;
+  --md-on-primary-container: #ffd7ee;
+
+  --md-secondary: #dac0cc;
+  --md-on-secondary: #3b2a33;
+  --md-secondary-container: #53404a;
+  --md-on-secondary-container: #ffd8ea;
+
+  --md-tertiary: #efbe95;
+  --md-on-tertiary: #442a14;
+  --md-tertiary-container: #5d3f27;
+  --md-on-tertiary-container: #ffdcc1;
+
+  --md-error: #ffb4ab;
+  --md-on-error: #690005;
+  --md-error-container: #93000a;
+  --md-on-error-container: #ffdad6;
+
+  --md-surface: #1a1115;
+  --md-on-surface: #ede0e2;
+  --md-on-surface-variant: #d0c1c7;
+  --md-outline: #928088;
+  --md-outline-variant: #534149;
+
+  --md-surface-container-lowest: #0f080b;
+  --md-surface-container-low: #1a1115;
+  --md-surface-container: #231a1e;
+  --md-surface-container-high: #2e2428;
+  --md-surface-container-highest: #392f33;
+
+  --card-bg: var(--md-surface-container-lowest);
+}
+
+
 
 /* ── 页面进入动画 ── */
 @keyframes fade-up {

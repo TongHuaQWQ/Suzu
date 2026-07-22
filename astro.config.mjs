@@ -34,7 +34,9 @@ export default defineConfig({
     domains: ["q.qlogo.cn"],
   },
   integrations: [expressiveCode({
-    themes: ['catppuccin-latte'],
+    themes: ['catppuccin-latte', 'catppuccin-frappe'],
+    useDarkModeMediaQuery: false,
+    themeCssSelector: (theme) => theme.name === 'catppuccin-frappe' ? '.dark' : ':root',
 
     plugins: [
       pluginLineNumbers(),

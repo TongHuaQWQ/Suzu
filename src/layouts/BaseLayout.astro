@@ -55,6 +55,14 @@ const ogImageURL = new URL(image, site.url);
       data-website-id="caf4bd1a-4be2-49aa-a385-814e7953b492"></script>
   </head>
   <body class="bg-(--md-surface) min-h-screen">
+    <!-- 防闪烁：渲染前恢复主题 -->
+    <script is:inline>
+      (function() {
+        var t = localStorage.getItem("theme");
+        if (!t) t = matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light";
+        document.documentElement.classList.toggle("dark", t === "dark");
+      })();
+    </script>
     <div class="max-w-6xl mx-auto px-4 mt-6 flex flex-col gap-6">
       <Navigation class="relative z-10" />
       <main>

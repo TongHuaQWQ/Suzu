@@ -11,6 +11,9 @@
 - **Package manager:** pnpm
 - **Runtime:** Node.js >=22.12.0
 - **MDX:** `@astrojs/mdx`
+- **Page Transitions:** SWUP + Parallel Plugin
+- **Search:** Pagefind（静态搜索）
+- **Theme:** MD3（Material Design 3）亮/暗切换 + Expressive Code 双主题
 
 ## Commands
 
@@ -71,6 +74,8 @@ src/
 │   ├── github.ts           #   GitHub API 数据获取
 │   └── callout-css.ts      #   Callout CSS 生成
 ├── scripts/                # 客户端脚本
+│   ├── fancybox.ts         #   Fancybox 灯箱初始化
+│   └── github-card.js      #   GitHub 卡片脚本
 ├── assets/                 # 静态资源（图片）
 │   ├── devices/            #   设备图
 │   ├── posts/              #   文章配图
@@ -154,10 +159,15 @@ photos?: string[]        # 外部图片 URL 数组
 - **文件名：** kebab-case（`my-first-post.md`）
 - **工具函数：** camelCase（`formatDate.ts`）
 - **Sätteri 插件：** 在 `src/plugins/` 下，MDAST 插件用 `remark-` 前缀，HAST 插件同上（经 satteri 配置）
-- **Callout：** 在 markdown/mdx 中使用 `> [!NOTE]` / `> [!WARNING]` 等 GitHub Alerts 语法或 `:::tip` 容器语法
+- **Callout：** 支持 `> [!NOTE]` / `> [!TIP]` 等 GitHub Alerts 语法（含 `[!NOTE+]` 展开 / `[!NOTE-]` 折叠）和 `:::tip` 容器语法
+- **Callout 插件注意：** 插件返回**结构化 MDAST 节点**（非 `rawHtml`），否则 Sätteri Rust 重解析会把 `{slug}` 中 `{` `}` 当作 MDX 表达式转义
 - **Wiki 链接：** 使用 `[[文章标题]]` 语法创建内部链接
 - **GitHub 卡片：** 使用 `github: 用户名/仓库` 语法嵌入仓库信息卡片
 - **相册：** `src/content/albums/{slug}.md` 即一个相册，图片放在 `src/assets/albums/{slug}/`（优化）或 `public/photos/{slug}/`（原图），封面图自动选择 cover 字段 → 本地第一张 → 外部第一张 URL
+- **暗黑模式：** 通过 `.dark` class 切换（localStorage 持久化 + 系统偏好检测），CSS 变量定义在 `:root` 和 `.dark` 中
+- **代码块双主题：** Expressive Code 配置 `themes: ['catppuccin-latte', 'catppuccin-frappe']`，通过 `themeCssSelector` 跟随 `.dark` class
+- **响应式导航：** 断点 `md: 768px`，以下显示汉堡菜单 + 悬浮搜索面板，桌面端导航链接水平排列、搜索框内联展开
+- **组件触摸反馈：** 按钮统一添加 `active:scale-95` / `active:bg-*` 类
 - **站点配置：** 所有站点级配置在 `src/site.config.ts` 中统一管理
 - **代码风格：** 遵循 Astro 官方风格（`astro/tsconfigs/strict`）
 - **构建时：** `generateGitHubCache()` 预取 GitHub 数据；`generateCalloutCSS()` 生成 Callout CSS
@@ -178,6 +188,13 @@ Sätteri 插件位于 `src/plugins/` 目录：
 - **HAST 插件：** 通过 `satteri()` 配置的 `hastPlugins` 数组注册，操作 HTML AST
 - **插件工厂：** 返回函数的闭包模式 vs 直接传插件对象
 - **参考文档：** https://satteri.bruits.org/docs/plugin-api/
+
+## 主题与样式
+
+- **MD3 色板：** 种子色 `#f472b6`（pink-400），亮/暗 CSS 变量在 `src/styles/global.css` 的 `:root` / `.dark` 中
+- **Callout 颜色：** 从 `rehype-callouts` GitHub 主题提取，通过 `generateCalloutCSS()` 构建时写入 `callout.css`
+- **代码块：** Expressive Code 渲染，亮色 `catppuccin-latte`，暗色 `catppuccin-frappe`
+- **页面过渡：** SWUP 垂直滑入动画（`transition-slide-up`）
 
 ## External Services
 

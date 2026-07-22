@@ -4,22 +4,46 @@ import { site } from "../../site.config";
 ---
 
 <nav
-  class="flex p-4 items-center justify-between bg-(--md-surface-container-lowest) rounded-2xl shadow-sm w-full"
+  class="relative flex p-4 items-center justify-between bg-(--md-surface-container-lowest) rounded-2xl shadow-sm w-full"
 >
-  <!-- 左侧：Logo/站点名称 -->
-  <a href="/" class="flex items-center gap-2 font-bold text-(--md-on-surface)">
-    <Icon name="gravity-ui:circle-fill" class="w-4 h-4 text-(--md-primary)" />
-    <span>{site.title}</span>
-  </a>
+  <!-- 左侧：Logo/站点名称 + 汉堡菜单 -->
+  <div class="flex items-center gap-1">
+    <button
+      id="menuToggle"
+      class="md:hidden p-2 rounded-xl hover:bg-(--md-surface-container-low) active:bg-(--md-surface-container) active:scale-95 text-(--md-on-surface-variant) transition-all duration-150"
+      aria-label="菜单"
+    >
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+      >
+        <line id="menuIconTop" x1="4" y1="6" x2="20" y2="6"></line>
+        <line id="menuIconMid" x1="4" y1="12" x2="20" y2="12"></line>
+        <line id="menuIconBtm" x1="4" y1="18" x2="20" y2="18"></line>
+      </svg>
+    </button>
+    <a
+      href="/"
+      class="flex items-center gap-2 font-bold text-(--md-on-surface)"
+    >
+      <Icon name="gravity-ui:circle-fill" class="w-4 h-4 text-(--md-primary)" />
+      <span>{site.title}</span>
+    </a>
+  </div>
 
-  <!-- 中间：主要导航链接 -->
+  <!-- 桌面端导航链接 -->
   <ul class="hidden md:flex gap-1">
     {
       site.nav.map((item) => (
         <li>
           <a
             href={item.href}
-            class="px-4 py-2 rounded-xl transition-colors hover:bg-(--md-primary-container) hover:text-(--md-on-primary-container) text-(--md-on-surface-variant)"
+            class="px-4 py-2 rounded-xl transition-colors hover:bg-(--md-primary-container) hover:text-(--md-on-primary-container) active:bg-(--md-primary) active:text-white text-(--md-on-surface-variant)"
           >
             {item.label}
           </a>
@@ -29,102 +53,129 @@ import { site } from "../../site.config";
   </ul>
 
   <!-- 右侧：图标按钮 -->
-  <div class="flex gap-2">
+  <div class="flex gap-2 items-center">
     <button
-      class="p-2 rounded-xl border border-(--md-outline-variant) hover:bg-(--md-surface-container-low) text-(--md-on-surface-variant) transition-colors"
+      id="themeToggle"
+      class="p-2 rounded-xl hover:bg-(--md-surface-container-low) active:bg-(--md-surface-container) active:scale-95 text-(--md-on-surface-variant) transition-all duration-150"
+      aria-label="切换主题"
     >
-      <Icon name="gravity-ui:moon" class="w-5 h-5" />
+      <Icon
+        name="mingcute:moon-stars-line"
+        class="w-5 h-5 theme-icon-dark block"
+      />
+      <Icon name="mingcute:sun-line" class="w-5 h-5 theme-icon-light hidden" />
     </button>
     <!-- 搜索容器 -->
     <div class="relative flex items-center">
-      <!-- 搜索输入框：默认隐藏 (w-0 opacity-0)，点击后展开 -->
+      <!-- 桌面端内联搜索框 -->
       <input
         type="text"
         id="searchInput"
         placeholder="搜索文章..."
         autocomplete="off"
-        class="w-0 opacity-0 overflow-hidden rounded-xl border border-(--md-outline-variant) bg-(--md-surface-container-low) px-0 py-2 text-base text-(--md-on-surface-variant) transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-(--md-primary-container) peer"
+        class="hidden md:block w-0 opacity-0 overflow-hidden rounded-xl border border-(--md-outline-variant) bg-(--md-surface-container-low) px-0 py-2 text-base text-(--md-on-surface-variant) transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-(--md-primary-container) peer"
       />
 
       <!-- 搜索按钮 -->
       <button
         id="searchBtn"
-        class="ml-0 p-2 rounded-xl border border-(--md-outline-variant) hover:bg-(--md-surface-container-low) text-(--md-on-surface-variant) peer-focus:border-(--md-primary-container) transition-all duration-300"
+        class="ml-0 p-2 rounded-xl hover:bg-(--md-surface-container-low) active:bg-(--md-surface-container) active:scale-95 text-(--md-on-surface-variant) peer-focus:border-(--md-primary-container) transition-all duration-150"
       >
         <Icon name="mingcute:search-2-line" class="w-5 h-5" />
       </button>
 
-      <!-- 搜索结果下拉 -->
+      <!-- 搜索弹出面板（移动端悬浮，桌面端也作为结果容器） -->
       <div
-        id="searchResults"
-        class="hidden fixed md:absolute top-25 md:top-15 left-1/2 -translate-x-1/2 md:left-auto md:right-0 md:translate-x-0 mt-2 w-[calc(100%-2rem)] md:w-110 max-h-[70vh] md:max-h-96 overflow-y-auto bg-(--md-surface-container-lowest) p-2 z-50 rounded-2xl shadow-lg"
-        style="scrollbar-color: var(--md-outline-variant) transparent"
+        id="searchPanel"
+        class="hidden fixed left-4 right-4 top-25 md:absolute md:left-auto md:right-0 md:top-full md:mt-6 md:w-110 z-50 bg-(--md-surface-container-lowest) rounded-xl shadow-lg border border-(--md-outline-variant)/50 overflow-hidden p-2"
       >
+        <!-- 移动端输入框 -->
+        <input
+          type="text"
+          id="mobileSearchInput"
+          placeholder="搜索文章..."
+          autocomplete="off"
+          class="md:hidden w-full rounded-lg border border-(--md-outline-variant) bg-(--md-surface-container-low) px-3 py-2 text-sm text-(--md-on-surface) focus:outline-none focus:ring-2 focus:ring-(--md-primary-container) mb-2"
+        />
+        <!-- 搜索结果 -->
+        <div id="searchResults" class="max-h-80 overflow-y-auto"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- 移动端悬浮菜单 -->
+  <div
+    id="mobileMenu"
+    class="hidden md:hidden absolute top-full left-2 mt-2 w-48 z-50 bg-(--md-surface-container-lowest) rounded-xl shadow-lg border border-(--md-outline-variant)/50 overflow-hidden"
+  >
+    <div class="flex flex-col gap-0.5 p-1.5">
+      {
+        site.nav.map((item) => (
+          <a
+            href={item.href}
+            class="block px-4 py-2.5 rounded-lg text-sm text-(--md-on-surface-variant) hover:bg-(--md-primary-container) hover:text-(--md-on-primary-container) active:bg-(--md-primary) active:text-white transition-colors"
+          >
+            {item.label}
+          </a>
+        ))
+      }
     </div>
   </div>
 </nav>
 
 <script>
-  const searchBtn = document.getElementById("searchBtn");
+  const searchBtn = document.getElementById("searchBtn")!;
   const searchInput = document.getElementById(
     "searchInput",
   ) as HTMLInputElement | null;
-  if (!searchBtn || !searchInput) throw new Error("Search elements not found");
+  const searchPanel = document.getElementById("searchPanel")!;
+  const mobileSearchInput = document.getElementById(
+    "mobileSearchInput",
+  ) as HTMLInputElement | null;
+  const resultsEl = document.getElementById("searchResults")!;
+  const isMobile = () => window.innerWidth < 768;
 
   let isOpen = false;
+  let debounceTimer: number | undefined;
 
   function setSearch(open: boolean) {
     isOpen = open;
-    searchInput!.classList.toggle("w-0", !open);
-    searchInput!.classList.toggle("opacity-0", !open);
-    searchInput!.classList.toggle("w-40", open);
-    searchInput!.classList.toggle("px-3", open);
-    searchInput!.classList.toggle("opacity-100", open);
-    searchBtn!.classList.toggle("ml-0", !open);
-    searchBtn!.classList.toggle("ml-2", open);
-    open ? searchInput!.focus() : searchInput!.blur();
+    if (isMobile()) {
+      searchPanel.classList.toggle("hidden", !open);
+      if (open) {
+        mobileSearchInput!.value = searchInput?.value || "";
+        setTimeout(() => mobileSearchInput!.focus(), 50);
+      }
+    } else {
+      searchInput!.classList.toggle("w-0", !open);
+      searchInput!.classList.toggle("opacity-0", !open);
+      searchInput!.classList.toggle("w-40", open);
+      searchInput!.classList.toggle("px-3", open);
+      searchInput!.classList.toggle("opacity-100", open);
+      searchBtn.classList.toggle("ml-0", !open);
+      searchBtn.classList.toggle("ml-2", open);
+      if (!open) searchPanel.classList.add("hidden");
+      open ? searchInput!.focus() : searchInput!.blur();
+    }
   }
 
-  searchBtn.addEventListener("click", () => setSearch(!isOpen));
-  document.addEventListener("click", (e) => {
-    if (
-      isOpen &&
-      !searchBtn.contains(e.target as Node) &&
-      !searchInput.contains(e.target as Node)
-    )
-      setSearch(false);
-  });
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && isOpen) setSearch(false);
-  });
-
-  // ── Pagefind 即时搜索 ──
-  const resultsEl = document.getElementById("searchResults")!;
-  let pagefind: any = null;
-  let debounceTimer: number | undefined;
-
-  searchInput!.addEventListener("input", () => {
+  function runSearch(q: string) {
+    searchPanel.classList.remove("hidden");
     clearTimeout(debounceTimer);
-    const q = searchInput!.value.trim();
     if (!q) {
-      resultsEl.classList.add("hidden");
       resultsEl.innerHTML = "";
       return;
     }
-
     debounceTimer = window.setTimeout(async () => {
-      const $import = new Function("url", "return import(url)");
-      const pf = await $import("/pagefind/pagefind.js");
+      const pf = await new Function("url", "return import(url)")(
+        "/pagefind/pagefind.js",
+      );
       const { results } = await pf.search(q);
       if (!results.length) {
         resultsEl.innerHTML = `<div class="p-3 text-sm text-(--md-on-surface-variant) opacity-60">未找到结果</div>`;
-        resultsEl.classList.remove("hidden");
         return;
       }
-
       const items = await Promise.all(results.map((r: any) => r.data()));
-      // 按 URL 去重（同一篇文章的标签/分类路由合并为一条）
       const seen = new Set<string>();
       const deduped = items.filter((item: any) => {
         const key = item.meta?.title || item.url;
@@ -135,76 +186,105 @@ import { site } from "../../site.config";
       resultsEl.innerHTML = deduped
         .slice(0, 6)
         .map(
-          (item: any) => `
-        <a href="${item.url}" class="block p-2 rounded-lg hover:bg-(--md-surface-container) transition-colors" data-search-result>
+          (
+            item: any,
+          ) => `<a href="${item.url}" class="block p-2 rounded-lg hover:bg-(--md-surface-container) transition-colors" data-search-result>
           <div class="text-base font-bold text-(--md-on-surface)">${item.meta?.title || item.url}</div>
           <div class="text-xs text-(--md-on-surface-variant) opacity-60 line-clamp-2">${item.excerpt}</div>
-        </a>
-      `,
+        </a>`,
         )
         .join("");
-      resultsEl.classList.remove("hidden");
     }, 200);
-  });
+  }
 
-  // 回车立即搜索
-  searchInput!.addEventListener("keydown", (e) => {
-    if (e.key !== "Enter") return;
-    const q = searchInput!.value.trim();
-    if (!q) return;
-    clearTimeout(debounceTimer);
-    (async () => {
-      const $import = new Function("url", "return import(url)");
-      const pf = await $import("/pagefind/pagefind.js");
-      const { results } = await pf.search(q);
-      if (!results.length) {
-        resultsEl.innerHTML = `<div class="p-3 text-sm text-(--md-on-surface-variant) opacity-60">未找到结果</div>`;
-        resultsEl.classList.remove("hidden");
-        return;
-      }
-      const items = await Promise.all(results.map((r: any) => r.data()));
-      const seen = new Set<string>();
-      const deduped = items.filter((item: any) => {
-        const k = item.meta?.title || item.url;
-        if (seen.has(k)) return false;
-        seen.add(k);
-        return true;
-      });
-      resultsEl.innerHTML = deduped
-        .slice(0, 6)
-        .map(
-          (item: any) => `
-        <a href="${item.url}" class="block p-2 rounded-lg hover:bg-(--md-surface-container) transition-colors" data-search-result>
-          <div class="text-base font-bold text-(--md-on-surface)">${item.meta?.title || item.url}</div>
-          <div class="text-xs text-(--md-on-surface-variant) opacity-60 line-clamp-2">${item.excerpt}</div>
-        </a>
-      `,
-        )
-        .join("");
-      resultsEl.classList.remove("hidden");
-    })();
-  });
+  searchBtn.addEventListener("click", () => setSearch(!isOpen));
 
-  // 点击结果面板外部关闭
   document.addEventListener("click", (e) => {
-    const target = e.target as Node;
-    if (
-      resultsEl.contains(target) ||
-      searchInput!.contains(target) ||
-      searchBtn.contains(target)
-    )
-      return;
-    resultsEl.classList.add("hidden");
+    if (!isOpen) return;
+    const t = e.target as Node;
+    if (searchBtn.contains(t) || searchPanel.contains(t)) return;
+    if (!isMobile() && searchInput?.contains(t)) return;
+    setSearch(false);
   });
 
-  // 点击搜索结果自动关闭
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && isOpen) setSearch(false);
+  });
+
+  function onSearchInput() {
+    const input = isMobile() ? mobileSearchInput : searchInput;
+    runSearch(input?.value.trim() || "");
+  }
+  function onSearchKeydown(e: KeyboardEvent) {
+    if (e.key === "Enter") onSearchInput();
+  }
+
+  searchInput?.addEventListener("input", onSearchInput);
+  searchInput?.addEventListener("keydown", onSearchKeydown);
+  mobileSearchInput?.addEventListener("input", onSearchInput);
+  mobileSearchInput?.addEventListener("keydown", onSearchKeydown);
+
   resultsEl.addEventListener("click", (e) => {
     const link = (e.target as HTMLElement).closest(
       "[data-search-result]",
     ) as HTMLAnchorElement | null;
     if (!link) return;
-    resultsEl.classList.add("hidden");
-    searchInput!.value = "";
+    if (searchInput) searchInput.value = "";
+    if (mobileSearchInput) mobileSearchInput.value = "";
     setSearch(false);
+  });
+
+  // ── 暗黑切换 ──
+  const themeToggle = document.getElementById("themeToggle")!;
+  const iconDark = themeToggle.querySelector(".theme-icon-dark")!;
+  const iconLight = themeToggle.querySelector(".theme-icon-light")!;
+
+  function getTheme(): string {
+    const stored = localStorage.getItem("theme");
+    if (stored) return stored;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
+  }
+
+  function applyTheme(theme: string) {
+    const isDark = theme === "dark";
+    document.documentElement.classList.toggle("dark", isDark);
+    iconDark.classList.toggle("hidden", isDark);
+    iconLight.classList.toggle("hidden", !isDark);
+    localStorage.setItem("theme", theme);
+  }
+
+  // 初始状态
+  applyTheme(getTheme());
+
+  themeToggle.addEventListener("click", () => {
+    const isDark = document.documentElement.classList.contains("dark");
+    applyTheme(isDark ? "light" : "dark");
+  });
+
+  // ── 移动端悬浮菜单 ──
+  const menuToggle = document.getElementById("menuToggle")!;
+  const menuPanel = document.getElementById("mobileMenu")!;
+  let menuOpen = false;
+
+  function setMenu(open: boolean) {
+    menuOpen = open;
+    menuPanel.classList.toggle("hidden", !open);
+  }
+
+  menuToggle.addEventListener("click", () => setMenu(!menuOpen));
+
+  // 点击外部关闭
+  document.addEventListener("click", (e) => {
+    if (!menuOpen) return;
+    const target = e.target as Node;
+    if (menuToggle.contains(target) || menuPanel.contains(target)) return;
+    setMenu(false);
+  });
+
+  // 点击链接后关闭
+  menuPanel.querySelectorAll("a").forEach((a) => {
+    a.addEventListener("click", () => setMenu(false));
   });
 </script>

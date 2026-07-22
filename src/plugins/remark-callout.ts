@@ -74,6 +74,43 @@ function buildCalloutNode(type: string, title: string, children: any[]): any {
   ]);
 }
 
+/** 构建可折叠 callout 节点（details/summary） */
+function buildCollapsibleCalloutNode(
+  type: string,
+  title: string,
+  children: any[],
+  defaultOpen: boolean,
+): any {
+  return {
+    type: "paragraph",
+    data: {
+      hName: "details",
+      hProperties: {
+        className: ["callout", `callout-${type}`],
+        "data-callout": type,
+        ...(defaultOpen ? { open: true } : {}),
+      },
+    },
+    children: [
+      {
+        type: "paragraph",
+        data: {
+          hName: "summary",
+          hProperties: { className: ["callout-title"] },
+        },
+        children: [
+          makeSpan("callout-title-text", [
+            { type: "text", value: title },
+          ]),
+        ],
+      },
+      ...(children.length > 0
+        ? [makeDiv("callout-content", children)]
+        : []),
+    ],
+  };
+}
+
 /** 检测并转换 > [!NOTE] blockquote */
 function detectCallout(node: any): any | null {
   const p = node.children?.[0];
@@ -85,17 +122,36 @@ function detectCallout(node: any): any | null {
   const type = m[1].toLowerCase();
   const label = getCalloutName(m[1]);
   if (!label) return null;
+  const collapsible = m[2] != null;
+  const defaultOpen = m[2] !== "-";
   const titleLine = tn.value.slice(m[0].length).split("\n")[0].trim();
   const title = titleLine || label;
 
-  // 去掉 [!NOTE] 前缀
-  tn.value = tn.value.slice(m[0].length);
-  let contentChildren = node.children;
-  if (tn.value.trim() === "" && p.children.length === 1) {
-    contentChildren = node.children.slice(1);
+  // 去掉前缀和标题行，只保留内容
+  const afterMarker = tn.value.slice(m[0].length);
+  const firstNewline = afterMarker.indexOf("\n");
+  const strippedValue = firstNewline >= 0
+    ? afterMarker.slice(firstNewline + 1)
+    : "";
+
+  if (strippedValue.trim() === "" && p.children.length === 1) {
+    // 首段空了，跳过
+    return buildCalloutNode(type, title, node.children.slice(1));
   }
 
-  return buildCalloutNode(type, title, contentChildren);
+  const newFirstP = {
+    type: "paragraph",
+    children: p.children.map((child: any) =>
+      child === tn
+        ? { type: "text", value: strippedValue }
+        : child,
+    ),
+  };
+  const newChildren = [newFirstP, ...node.children.slice(1)];
+
+  return collapsible
+    ? buildCollapsibleCalloutNode(type, title, newChildren, defaultOpen)
+    : buildCalloutNode(type, title, newChildren);
 }
 
 // ── MDAST Plugin: > [!NOTE] blockquote 语法 ──

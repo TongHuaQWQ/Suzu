@@ -52,17 +52,13 @@ const data = {
   >
     <div class="flex items-center gap-3 flex-1">
       <div
-        class="h-12 w-12 rounded-lg bg-(--primary) flex items-center justify-center text-white dark:text-black/70 shrink-0"
+        class="h-12 w-12 rounded-lg bg-(--md-primary-container) flex items-center justify-center text-white shrink-0"
       >
-        <Icon name="mingcute:love-fill" class="h-6 w-6" />
+        <Icon name="mingcute:love-fill" class="h-6 w-6 text-(--md-primary)" />
       </div>
       <div>
-        <h3
-          class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-1"
-        >
-          分享
-        </h3>
-        <p class="text-sm text-neutral-600 dark:text-neutral-400">
+        <h3 class="text-lg font-semibold text-(--md-on-surface) mb-1">分享</h3>
+        <p class="text-sm text-(--md-on-surface-variant)">
           如果这篇文章对你有帮助，欢迎分享给更多人！
         </p>
       </div>
@@ -70,9 +66,12 @@ const data = {
     <div class="flex items-center gap-3">
       <button
         id="openShareModalBtn"
-        class="inline-flex items-center gap-2 px-6 py-3 bg-(--primary) text-white dark:text-black/70 rounded-lg font-medium hover:bg-(--primary)/80 hover:scale-105 active:scale-95 transition-all whitespace-nowrap"
+        class="inline-flex items-center gap-2 px-6 py-3 bg-(--md-primary-container) text-(--md-primary) rounded-lg font-medium hover:bg-(--primary)/80 hover:scale-105 active:scale-95 transition-all whitespace-nowrap"
       >
-        <Icon name="mingcute:share-2-fill" class="w-4 h-4" /> 分享
+        <Icon
+          name="mingcute:share-2-fill"
+          class="w-4 h-4 text-(--md-primary)"
+        /> 分享
       </button>
     </div>
   </div>

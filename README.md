@@ -4,17 +4,31 @@
 
 [**🖥️ 在线演示**](https://suzu.24862648.xyz/)
 
-> [!NOTE] NOTE
-> 思考后在觉得是否使用本项目，项目目前并没有太多优点
+# 项目名称 (Project Name)
 
-> [!CAUTION] CAUTION
-> 项目功能并未完全，思考后在确定使用
+> 一个正在成长中的实验性项目
 
-> [!WARNING] WARNING
-> 本项目仍在积极开发中，部分功能可能发生变化。
+## 🚧 当前状态（替代一堆警告）
 
-> [!TIP] TIP
-> 本项目参考了 [Fuwari](https://github.com/saicaca/fuwari) 的页面设计和 [Mizuki](https://github.com/LyraVoid/Mizuki) 的功能，可以使用这个项目
+- **开发阶段**：Alpha / 积极迭代中，API 和功能可能会变动。
+- **功能完整性**：核心功能尚在打磨，暂不建议用于生产环境。
+- **性能提示**：目前无性能优势，仅用于学习或尝鲜。
+
+## ✨ 设计灵感
+
+本项目深受以下优秀项目启发：
+- 页面设计：[Fuwari](https://github.com/saicaca/fuwari)
+- 功能逻辑：[Mizuki](https://github.com/LyraVoid/Mizuki)
+
+如果你需要稳定版本，建议优先使用上述原项目。
+
+## 🎯 规划路线图
+- [x] 基础功能搭建
+- [ ] 稳定性优化
+- [ ] 文档完善
+
+> [!TIP]
+> 如果你喜欢折腾新事物，欢迎 Star 关注或提交 Issue 讨论！
 
 
 ## ✨ 功能特性
@@ -62,7 +76,7 @@
 
 ### 🚧 开发中 / 计划中
 
-- [ ] 亮色 / 暗色模式切换
+- [X] 亮色 / 暗色模式切换
 - [x] 全文搜索
 - [ ] 评论系统
 - [x] RSS / Atom 订阅
