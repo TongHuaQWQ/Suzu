@@ -148,6 +148,8 @@ const coverImage = post.data.image
   graphNodes={graphData?.nodes}
   graphEdges={graphData?.edges}
   currentSlug={`/posts/${post.id}`}
+  showHome={true}
+  hideOnScroll={true}
 >
   <article class="card overflow-hidden animate-fade-up">
     <!-- 封面图 -->
@@ -167,6 +169,18 @@ const coverImage = post.data.image
 
     <!-- 内容区 -->
     <div class="article-content pl-6 md:pl-9 pr-6 md:pr-9 pt-7 pb-8">
+      <!-- 返回首页 -->
+      <a
+        href="/"
+        class="inline-flex items-center gap-1.5 text-sm text-(--md-on-surface-variant) hover:text-(--md-primary) transition-colors mb-4"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5" />
+          <path d="m12 19-7-7 7-7" />
+        </svg>
+        返回首页
+      </a>
+
       <!-- 标题 -->
       <h1
         class="relative font-bold text-3xl md:text-4xl text-(--md-on-surface)
@@ -313,4 +327,5 @@ const coverImage = post.data.image
       )
     }
   </div>
+
 </SidebarLayout>

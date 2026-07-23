@@ -76,6 +76,19 @@
   color: var(--md-on-surface-variant);
 }
 
+/* ── 导航栏滚动效果 ── */
+#mainNav.nav-scrolled {
+  background: color-mix(in srgb, var(--md-surface-container-lowest) 80%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.08);
+}
+
+/* ── 浮动面板毛玻璃 ── */
+.fab-panel {
+  background: color-mix(in srgb, var(--md-surface-container-lowest) 70%, transparent);
+}
+
 .dark {
   color-scheme: dark;
 

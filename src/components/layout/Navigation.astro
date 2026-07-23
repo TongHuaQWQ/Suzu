@@ -1,10 +1,19 @@
 ---
 import { Icon } from "astro-icon/components";
 import { site } from "../../site.config";
+
+interface Props {
+  hideOnScroll?: boolean;
+}
+
+const { hideOnScroll } = Astro.props;
 ---
 
 <nav
-  class="relative flex p-4 items-center justify-between bg-(--md-surface-container-lowest) rounded-2xl shadow-sm w-full"
+  id="mainNav"
+  class="sticky top-0 z-30 flex p-4 items-center justify-between bg-(--md-surface-container-lowest)/80 backdrop-blur-lg rounded-2xl shadow-sm w-full transition-transform duration-300"
+  data-no-swup
+  data-hide-on-scroll={hideOnScroll ? "true" : "false"}
 >
   <!-- 左侧：Logo/站点名称 + 汉堡菜单 -->
   <div class="flex items-center gap-1">
@@ -287,4 +296,46 @@ import { site } from "../../site.config";
   menuPanel.querySelectorAll("a").forEach((a) => {
     a.addEventListener("click", () => setMenu(false));
   });
+
+  // ── 导航栏：下滑隐藏、上滑显示 + 滚动背景 ──
+  function initNavScroll() {
+    const nav = document.getElementById("mainNav");
+    if (!nav) return;
+    const hideOnScroll = nav.getAttribute("data-hide-on-scroll") === "true";
+    let lastScroll = window.scrollY;
+    const scrollThreshold = 20;
+
+    window.addEventListener(
+      "scroll",
+      () => {
+        const currentScroll = window.scrollY;
+
+        // 背景模糊：所有页面都生效
+        nav.classList.toggle("nav-scrolled", currentScroll > 10);
+
+        // 下滑隐藏 / 上滑显示：仅文章页
+        if (hideOnScroll) {
+          const diff = currentScroll - lastScroll;
+          if (Math.abs(diff) > scrollThreshold) {
+            if (diff > 0 && currentScroll > 80) {
+              nav.style.transform = "translateY(-120%)";
+            } else if (diff < 0) {
+              nav.style.transform = "translateY(0)";
+            }
+          }
+        } else {
+          // 非文章页：始终保持可见
+          nav.style.transform = "translateY(0)";
+        }
+
+        lastScroll = currentScroll;
+      },
+      { passive: true },
+    );
+  }
+
+  // 避免 SWUP 切换后丢失
+  const existing = document.getElementById("mainNav");
+  if (existing) initNavScroll();
+  document.addEventListener("astro:after-swap", initNavScroll);
 </script>

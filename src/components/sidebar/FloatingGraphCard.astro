@@ -11,13 +11,9 @@ const { nodes, edges, currentSlug } = Astro.props;
 
 {
   nodes.length > 0 && (
-    <div class="card p-6">
-      <h4 class="flex items-center gap-2 text-sm font-semibold text-(--md-on-surface) mb-3">
-        <span class="w-1 h-4 rounded-full bg-(--md-primary)" />
-        图谱
-      </h4>
+    <div class="">
       <div
-        id="graph-container"
+        id="float-graph-container"
         class="w-full h-64 min-h-64 rounded-lg overflow-hidden bg-(--md-surface) cursor-grab active:cursor-grabbing"
         data-nodes={JSON.stringify(nodes)}
         data-edges={JSON.stringify(edges)}
@@ -211,7 +207,7 @@ const { nodes, edges, currentSlug } = Astro.props;
   }
 
   function initGraph() {
-    const container = document.getElementById("graph-container");
+    const container = document.getElementById("float-graph-container");
     if (!container) return;
 
     const nodes = JSON.parse(container.dataset.nodes || "[]");

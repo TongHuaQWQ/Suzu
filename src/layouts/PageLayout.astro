@@ -9,7 +9,7 @@ interface Props {
 const { title = site.title } = Astro.props;
 ---
 
-<BaseLayout title={title}>
+<BaseLayout title={title} hideOnScroll={false}>
   <div class="py-8 transition-slide-up">
     <slot />
   </div>

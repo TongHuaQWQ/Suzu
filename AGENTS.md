@@ -36,7 +36,7 @@ src/
 │   └── albums/             #   相册 (md)
 ├── components/             # UI 组件
 │   ├── backpack/           #   装备页面组件
-│   ├── blog/               #   博客组件（文章卡片、图谱等）
+│   ├── blog/               #   博客组件（文章卡片、图谱、回到顶部、悬浮操作栏等）
 │   ├── layout/             #   布局相关组件（Header, Footer 等）
 │   ├── sidebar/            #   侧边栏组件
 │   └── ui/                 #   通用 UI 组件

@@ -37,16 +37,18 @@ const allTags = [...new Set(posts.flatMap((p) => p.data.tags ?? []))];
   <ProfileCard />
   {
     site.features.graph && graphNodes && graphNodes.length > 0 && (
-      <GraphCard
-        nodes={graphNodes}
-        edges={graphEdges ?? []}
-        currentSlug={currentSlug}
-      />
+      <div class="max-lg:hidden">
+        <GraphCard
+          nodes={graphNodes}
+          edges={graphEdges ?? []}
+          currentSlug={currentSlug}
+        />
+      </div>
     )
   }
   <CategoryCard categories={allCategories} />
   <TagCard tags={allTags} />
 </div>
-<div class="lg:sticky lg:top-6">
+<div class="lg:sticky lg:top-6 max-lg:hidden">
   {headings && headings.length > 0 && <TocCard headings={headings} />}
 </div>

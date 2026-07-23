@@ -8,10 +8,12 @@ interface Props {
   title?: string;
   description?: string;
   image?: string;
+  hideOnScroll?: boolean;
 }
 
 const {
   title = site.title,
+  hideOnScroll,
   description = site.description,
   image = site.seo.ogImage,
 } = Astro.props;
@@ -64,11 +66,12 @@ const ogImageURL = new URL(image, site.url);
       })();
     </script>
     <div class="max-w-6xl mx-auto px-4 mt-6 flex flex-col gap-6">
-      <Navigation class="relative z-10" />
+      <Navigation class="relative z-10" {hideOnScroll} />
       <main>
         <slot />
       </main>
     </div>
+
   </body>
   <script>
     // ── 标题锚点平滑滚动（全局）──

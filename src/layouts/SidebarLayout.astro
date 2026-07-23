@@ -3,6 +3,7 @@ import type { MarkdownHeading } from "astro";
 import type { GraphNode, GraphEdge } from "../utils/graph";
 import BaseLayout from "./BaseLayout.astro";
 import Sidebar from "../components/Sidebar.astro";
+import BackToTop from "../components/blog/BackToTop.astro";
 import { site } from "../site.config";
 import Footer from "../components/blog/Footer.astro";
 
@@ -12,6 +13,10 @@ interface Props {
   graphNodes?: GraphNode[];
   graphEdges?: GraphEdge[];
   currentSlug?: string;
+  /** 是否显示悬浮「返回首页」按钮，文章页用 */
+  showHome?: boolean;
+  /** 是否下滑隐藏导航栏，文章页用 */
+  hideOnScroll?: boolean;
 }
 
 const {
@@ -20,10 +25,12 @@ const {
   graphNodes,
   graphEdges,
   currentSlug,
+  showHome,
+  hideOnScroll,
 } = Astro.props;
 ---
 
-<BaseLayout title={title}>
+<BaseLayout title={title} {hideOnScroll}>
   <div class="py-8 grid grid-cols-1 lg:grid-cols-4 gap-6">
     <!-- 左侧：侧边栏（占 1 列）—— 手机上排第二 -->
     <div class="lg:col-span-1 order-2 lg:order-0 lg:sticky">
@@ -46,4 +53,11 @@ const {
       </footer>
     </div>
   </div>
+  <BackToTop
+    showHome={showHome}
+    headings={headings}
+    graphNodes={graphNodes}
+    graphEdges={graphEdges}
+    currentSlug={currentSlug}
+  />
 </BaseLayout>
